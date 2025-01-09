@@ -11,7 +11,8 @@ from plotly.subplots import make_subplots
 # from prep import create_tornado, simple_bar, stacked_bar, simple_pie, draw_pie, make_spider, text_fig, create_box_bars, create_heatmap
 from styling import template, marker_color, marker_color_full, color_list
 from solver import Mafia, merge_two_dicts
-from prep import create_timeline, get_full_data, winrate_chart, create_cart_distibution, get_role
+from prep import create_timeline, get_full_data, winrate_chart, create_cart_distibution, get_role, \
+    create_shooting_target, create_box_bars
 from loguru import logger
 import json
 
@@ -40,6 +41,11 @@ players = [
     {"name": "Ад", "image": "assets/foto/Ad.jpg"},
 ]
 
+
+# =====================================================================
+#                               READ DATA
+# =====================================================================
+
 with open('data/tstata_kc.json') as f:
     kc_data=json.load(f)
 
@@ -52,6 +58,22 @@ top10_players = df_games.groupby('player_name')['total_score'].sum().reset_index
 # print(top10_players)
 
 top_players = points[points['player_name'].isin(top10_players)]
+
+# FirstShot Data
+df_firstshots = pd.json_normalize(
+        [game['gamefirstshot'] for game in kc_data if 'gamefirstshot' in game]
+    )
+df_firstshots.dropna(inplace=True)
+df_firstshots.rename(columns={'score': 'score_firstshot'}, inplace=True)
+
+df_firstshots = df_firstshots.merge(df_games[['game_id', 'player_id', 'player_name', 'role_id', 'who_win', 'best_roles', 'maf_in_best']],
+                                    on=['game_id', 'player_id'], how='left')
+
+
+
+
+
+
 
 
 # Данные о картах
@@ -152,18 +174,20 @@ app.layout = html.Div([
                     ], width=4
                     ),
                     dbc.Col([
-                        dcc.Graph(id="role-pie-chart", config={'displayModeBar': False})
+                        # dcc.Graph(id="role-pie-chart", config={'displayModeBar': False})
                     ], style={},  width=4, className="app__tile"),
 
                     dbc.Col([
                         html.Div([
-                            html.Div('Призовые места', className="tile__title"),
-                            # html.Div(id="carts_info", className="tile__value"),
-                            # html.Div(id="cart_distibution", className="")
+                            html.Div('Количество промахов', className="tile__title"),
+                            html.Div(id="firstshots_miss", className="tile__value"),
+                            html.Div('Распределение отстрелов по боксам', className="tile__title"),
+                            dcc.Graph(id="firstshots_distribution", config={'displayModeBar': False}, style={'height':150, 'maxWidth':'100%'}),
                         ], style={'marginBottom': 10}, className="app__tile"),
                         html.Div([
-                            html.Div('Отстрелы', className="tile__title"),
+                            html.Div('Убит в первую ночь', className="tile__title"),
                             html.Div(id="total_firstshot", className="tile__value"),
+                            dcc.Graph(id="shooting_target", config={'displayModeBar': False}),
                         ], className="app__tile"),
                     ], width=4),
 
@@ -192,7 +216,7 @@ app.layout = html.Div([
     [
         Output("player-content", "children"),
         Output("tournament-timeline", "figure"),
-        Output("role-pie-chart", "figure")
+        # Output("role-pie-chart", "figure")
     ],
     [Input(f"player-{i}", "n_clicks") for i in range(len(players))]
 )
@@ -234,17 +258,19 @@ def update_dashboard(*args):
         width=200
     )
 
-    return f"You selected: {selected_player}", fig_timeline, fig_pie
+    return f"You selected: {selected_player}", fig_timeline
 
 
 @app.callback(
     [
         Output("total_games", "children"),
         Output("total_winrate", "children"),
-
+        Output("firstshots_miss", "children"),
         Output("total_firstshot", "children"),
         Output("winrate_chart", "children"),
         Output("cart_distibution", "children"),
+        Output("shooting_target", "figure"),
+        Output("firstshots_distribution", "figure"),
 
     ],
     [Input(f"player-{i}", "n_clicks") for i in range(len(players))]
@@ -252,20 +278,34 @@ def update_dashboard(*args):
 def update_tile_info(*args):
     ctx = dash.callback_context
     fig_winrate = winrate_chart(70)
-    data = '''role_id,count,role_name,color
-    1,55,Мирный,#f24236
-    2,20,Мафия,#295883
-    4,13,Шериф,#cbe5f3
-    3,7,Дон,#efbf00'''
+
+    # Shooting Chart  + Data
+    shots = [0, 1, 2, 3, 1, 2, 0, 3, 2, 1]
+    shots_list = df_firstshots['maf_in_best'].to_list()
+    fig_target = create_shooting_target(shots_list)
+
+
+    # Shooting Miss
+    firstshots_miss_value = df_games.shape[0] /10 - df_firstshots.shape[0]
+    print(firstshots_miss_value)
+    firstshot_by_box = df_firstshots.groupby('boxNumber')['id'].count().reset_index().rename(columns={'id': 'count'})
+    firstshots_distribution =  create_box_bars(firstshot_by_box['count'] , param="#295883")
+
 
     # Преобразуем строку в DataFrame и конвертируем count в int
     df = pd.read_csv('drawn_сards.csv', index_col=0)
-    df['count'] = df['count'].astype(int)  # Преобразуем
+    df['count'] = df['count'].astype(int)
 
     cart_distibution = create_cart_distibution(df)
     if not ctx.triggered:
         return (html.Div(df_games.shape[0]/10),
-                html.Div('60%'), html.Div('1'),  fig_winrate, cart_distibution)
+                html.Div('60%'),
+                html.Div(firstshots_miss_value),
+                html.Div(df_firstshots.shape[0]), # убито в первую ночь
+                fig_winrate,
+                cart_distibution,
+                fig_target,
+                firstshots_distribution)
     else:
         clicked_id = ctx.triggered[0]["prop_id"].split(".")[0]
         player_index = int(clicked_id.split("-")[-1])
@@ -273,21 +313,29 @@ def update_tile_info(*args):
         # print('selected_player', selected_player)
 
     selected_games = df_games[df_games['player_name'].isin([selected_player])]
-    drawn_сards = selected_games['role_id'].value_counts().reset_index().merge(get_role(), on='role_id', how='left')
+    drawn_сards = selected_games['role_id'].value_counts().reset_index().merge(get_role(), on='role_id', how='left', )
     cart_distibution = create_cart_distibution(drawn_сards)
 
     winrate = selected_games['score'].value_counts(normalize=True).reset_index()
 
     winrate_value = (winrate[winrate['score'] == 1]['proportion'].values[0] * 100).astype(int)
     fig_winrate = winrate_chart(winrate_value)
+    # fig_target = create_shooting_target(shots)
+
+    shots_list = df_firstshots[df_firstshots['player_name'] == selected_player]['maf_in_best'].to_list()
+    fig_target = create_shooting_target(shots_list)
 
 
     return  (html.Div(selected_games.shape[0]),
-            html.Div(f"{winrate_value}%"), html.Div('1'),  fig_winrate, cart_distibution)
+            html.Div(f"{winrate_value}%"),
+             html.Div(firstshots_miss_value),
+             html.Div(df_firstshots[df_firstshots['player_name'] == selected_player].shape[0]),  # убит в первую ночь
+             fig_winrate, cart_distibution, fig_target,
+             go.Figure())
 
 
 
 # don't run when imported, only when standalone
 if __name__ == '__main__':
-    port = os.getenv("DASH_PORT", 8053)
+    port = os.getenv("DASH_PORT", 8054)
     app.run_server(debug=True, port=port, host="0.0.0.0")

@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 import numpy as np
 from dash import Dash, html
 import dash_bootstrap_components as dbc
+from collections import Counter
 
 
 def get_role():
@@ -46,6 +47,21 @@ def get_full_data(data):
 
     df_games['total_score'] = df_games['score'] + df_games['score_dop'] + df_games['score_minus'] + df_games[
         'score_firstshot']
+
+    best_roles_dict = df_games[df_games['marked_in_best'] == 1].groupby('game_id')['role_id'].agg(list).to_dict()
+
+    # Применяем словарь к датафрейму
+    df_games['best_roles'] = df_games['game_id'].map(best_roles_dict)
+
+    # Функция для подсчета мафиозных ролей с обработкой NaN
+    def count_mafia_roles(roles):
+        if isinstance(roles, list):
+            return sum(1 for role in roles if role in [2, 3])
+        return 0
+
+    # Добавляем столбец с подсчетом мафиозных ролей среди лучших игроков
+    df_games['maf_in_best'] = df_games['best_roles'].apply(count_mafia_roles)
+
 
     df_games['game_date'] = pd.to_datetime(df_games['game_date'])
 
@@ -217,3 +233,143 @@ def create_cart_distibution(df):
         ], className='container')
     ])
     return layout
+
+def create_shooting_target(values):
+
+    counts = Counter(values)
+
+    # Создаем случайные координаты для точек на круге
+    n_points = len(values)
+    np.random.seed(42)
+    angles = np.random.uniform(0, 2 * np.pi, n_points)
+    # Инвертируем значения и используем их как радиус
+    radii = [3 - val for val in values]  # 3 в центре, 0 на краю
+
+    # Преобразуем полярные координаты в декартовы
+    x = [r * np.cos(theta) for r, theta in zip(radii, angles)]
+    y = [r * np.sin(theta) for r, theta in zip(radii, angles)]
+
+    # Создаем фигуру
+    fig = go.Figure()
+
+    # Добавляем круги мишени
+    for r in [1, 2]:
+        circle_points = 100
+        theta = np.linspace(0, 2 * np.pi, circle_points)
+        fig.add_trace(go.Scatter(
+            x=r * np.cos(theta),
+            y=r * np.sin(theta),
+            mode='lines',
+            line=dict(color='gray', width=1),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+
+    # Добавляем оси
+    fig.add_trace(go.Scatter(
+        x=[-3, 3], y=[0, 0],
+        mode='lines',
+        line=dict(color='gray', width=1, dash='dash'),
+        showlegend=False,
+        hoverinfo='skip'
+    ))
+    fig.add_trace(go.Scatter(
+        x=[0, 0], y=[-3, 3],
+        mode='lines',
+        line=dict(color='gray', width=1, dash='dash'),
+        showlegend=False,
+        hoverinfo='skip'
+    ))
+
+    # Добавляем точки
+    fig.add_trace(go.Scatter(
+        x=x,
+        y=y,
+        mode='markers',
+        marker=dict(
+            size=14,
+            color=values,
+            colorscale=['#f24236', '#295883', '#efbf00', '#cbe5f3'],
+            showscale=False,
+            # colorbar=dict(
+            #     title='Значение',
+            #     ticktext=['0', '1', '2', '3'],
+            #     tickvals=[0, 1, 2, 3]
+            # )
+            cmin=0,  # Устанавливаем минимальное значение цветовой шкалы
+            cmax=3  # Устанавливаем максимальное значение цветовой шкалы
+        ),
+        text=[f'Значение: {val}<br>Всего таких: {counts[val]}' for val in values],
+        hoverinfo='text'
+    ))
+
+    # Настраиваем макет
+    fig.update_layout(
+        margin={'t': 10, 'r': 10, 'l': 10, 'b': 10},
+        xaxis=dict(
+            range=[-3.5, 3.5],
+            zeroline=False,
+            showgrid=False,
+            showticklabels=False
+        ),
+        yaxis=dict(
+            range=[-3.5, 3.5],
+            zeroline=False,
+            showgrid=False,
+            showticklabels=False,
+            scaleanchor='x',  # делаем круги круглыми
+            scaleratio=1
+        ),
+        width=300,
+        height=300,
+        showlegend=False
+    )
+    return fig
+
+
+def create_box_bars(values, param='#dsdss'):
+    # Найдем индекс максимального значения
+    max_index = np.argmax(values)
+
+    # Создадим список цветов: подсветим бар с максимальным значением
+    colors = [param] * len(values)
+    colors[max_index] = '#f24236'  # Подсвечиваем максимальное значение
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        y=values,
+        marker_color=colors,  # Используем список цветов
+        name='expenses',
+        hovertemplate='Бокс: ' + '<b>%{x}</b>' + '<br>' +
+                      'Сыграно: ' + '<b>%{y}</b>' +
+                      '<extra></extra>',
+    ))
+
+    fig.update_traces(
+        texttemplate=['%{y}' if x > 0 else '' for x in values],
+        textposition='outside'
+    )
+
+    fig.update_yaxes(visible=False)
+    fig.update_xaxes(
+        range=[0.5, 10.5],
+        zeroline=False,
+        showgrid=False,
+        linecolor='grey',
+        linewidth=2,
+        tickfont_size=10,
+        tickmode="array",
+        tickvals=np.arange(1, 11, 1),
+        ticktext=[str(x) for x in range(1, 11)],
+        fixedrange=True,
+        tickangle=0
+    )
+
+    fig.update_layout(
+        height=200,
+        margin={'t': 40, 'r': 10, 'l': 10, 'b': 10, 'pad': 0},
+        showlegend=False,
+    )
+
+    return fig
