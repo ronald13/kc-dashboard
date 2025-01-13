@@ -71,9 +71,11 @@ def get_full_data(data):
 def create_timeline(df, selected_player=None):
     # Преобразование строковых дат в формат datetime
     df['game_date'] = pd.to_datetime(df['game_date'])
+    df.sort_values(by=['game_date', 'total_score'], ascending=[True, True] , inplace=True)
 
     # Группировка по дате и подсчет количества событий на каждую дату
     grouped = df.groupby('game_date').size()
+
 
     # Создание координат для точек с симметрией
     x_coords = []
@@ -121,43 +123,74 @@ def create_timeline(df, selected_player=None):
         )
     )
 
+    start_date = df['game_date'].min()
+    end_date = df['game_date'].max()
+
+    # Даты для вертикальных линий (начало каждого месяца)
+    month_lines = pd.date_range(start=start_date.replace(day=1),
+                               end=end_date,
+                               freq='MS')
+
+    # Даты для меток (середина каждого месяца)
+    month_labels = pd.date_range(start=start_date.replace(day=1),
+                                end=end_date,
+                                freq='MS')
+    # Сдвигаем метки на середину месяца
+    month_labels = month_labels + pd.Timedelta(days=14)  # примерно середина месяца
+
+    # Добавляем вертикальные линии для каждого месяца
+    for date in month_lines[1:]:
+        fig_timeline.add_vline(
+            x=date,
+            line_width=1,
+            line_dash="dash",
+            line_color="gray",
+            opacity=0.5
+        )
+
     # Настройка осей и внешнего вида
     fig_timeline.update_layout(
         margin={'t': 10, 'b': 10, 'l': 10, 'r': 10},
         xaxis=dict(
-            showticklabels=False,
+            showticklabels=True,
+            tickmode='array',
+            ticktext=[d.strftime('%B %Y') for d in month_labels],
+            tickvals=month_labels,  # используем сдвинутые даты для меток
+            tickangle=0,
+            tickfont=dict(size=12),
+            showgrid=False,
         ),
         yaxis=dict(
             title='',
             showticklabels=False
         ),
         showlegend=False,
-        height=185,
+        height=285,
     )
 
     # Добавление аннотаций для первой и последней даты
     first_date = df['game_date'].min().strftime('%Y-%m-%d')
     last_date = df['game_date'].max().strftime('%Y-%m-%d')
     #
-    fig_timeline.add_annotation(
-        x=first_date,
-        y=0,
-        text=first_date,
-        showarrow=False,
-        xshift=-50,  # Сдвиг аннотации влево
-        yanchor="middle",
-        font_size = 16
-    )
-    fig_timeline.add_annotation(
-        x=last_date,
-        y=0,
-        text=last_date,
-        showarrow=False,
-        xshift=50,  # Сдвиг аннотации вправо
-        yanchor="middle",
-        font_size=16,
-
-    )
+    # fig_timeline.add_annotation(
+    #     x=first_date,
+    #     y=0,
+    #     text=first_date,
+    #     showarrow=False,
+    #     xshift=-50,  # Сдвиг аннотации влево
+    #     yanchor="middle",
+    #     font_size = 16
+    # )
+    # fig_timeline.add_annotation(
+    #     x=last_date,
+    #     y=0,
+    #     text=last_date,
+    #     showarrow=False,
+    #     xshift=50,  # Сдвиг аннотации вправо
+    #     yanchor="middle",
+    #     font_size=16,
+    #
+    # )
 
     return fig_timeline
 
@@ -188,8 +221,6 @@ def create_cart_distibution(df):
     bars = []
     current_position = 0
     for _, role in df.iterrows():
-        # print(f"{role['count']}%")
-        print(type(role['count']))
         bars.append(
             html.Div(
                 className='progress-bar',
@@ -200,7 +231,6 @@ def create_cart_distibution(df):
                 }
             )
         )
-        # print(role.count, type(role.count))
         current_position += role['count']
 
     # Создаем элементы легенды
