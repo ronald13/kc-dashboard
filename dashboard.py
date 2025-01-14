@@ -12,7 +12,7 @@ from plotly.subplots import make_subplots
 from styling import template, marker_color, marker_color_full, color_list
 from solver import Mafia, merge_two_dicts
 from prep import create_timeline, get_full_data, winrate_chart, create_cart_distibution, get_role, \
-    create_shooting_target, create_box_bars
+    create_shooting_target, create_box_bars, create_circular_layout
 from loguru import logger
 import json
 
@@ -77,7 +77,16 @@ df_firstshots = df_firstshots.merge(df_games[['game_id', 'player_id', 'player_na
                                     on=['game_id', 'player_id'], how='left')
 
 
-
+def generate_sample_data():
+    data = {
+        'box_id': list(range(1, 11)),
+        'win_rate': np.random.uniform(0.3, 0.8, 10),
+        'shots': np.random.randint(100, 1000, 10),
+        'total_games': np.random.randint(50, 200, 10)
+    }
+    # Преобразуем процент побед в проценты
+    data['win_rate'] = [f"{(rate * 100):.1f}%" for rate in data['win_rate']]
+    return pd.DataFrame(data)
 
 
 # =====================================================================
@@ -139,7 +148,7 @@ app.layout = html.Div([
 
     html.Div([
             # Header с изображениями игроков
-            html.Div('Кликни на изображение чтобы получить дополнительную аналитику', style={'textAlign': 'center'}),
+            html.Div('Кликни на изображение чтобы получить дополнительную аналитику', style={'textAlign': 'center', 'color':'#e5e7eb'}),
             dbc.Row(
             [
                 dbc.Col([
@@ -172,7 +181,7 @@ app.layout = html.Div([
                             "boxShadow": "0 4px 6px rgba(0, 0, 0, 0.1)"
                         }
                     ),
-                    html.Div(player["nickname"], style={"textAlign": "center", "marginTop": "8px"})
+                    html.Div(player["nickname"], style={"textAlign": "left", "marginTop": "8px"})
 
                 ], width=1
 
@@ -210,23 +219,49 @@ app.layout = html.Div([
                     ),
                     dbc.Col([
                         html.Div(id="player-content", className="text-center my-4", style={"fontSize": "24px"}),
+                        html.Div([
+                                dcc.Checklist(
+                                    id='metric-selector',
+                                    options=[
+                                        {'label': ' Процент побед (WR)', 'value': 'win_rate'},
+                                        {'label': ' Количество выстрелов', 'value': 'shots'}
+                                    ],
+                                    value=[],
+                                    style={'fontSize': '18px'},
+                                    labelStyle={'display': 'block', 'marginBottom': '10px'}
+                                ),
+
+                                dcc.Graph(id='circular-layout', config={'displayModeBar': False}),
+
+                            ], style={'width': '100%', 'margin': '20px auto', 'textAlign': 'center'}),
+
+
+
                     ], style={},  width=4, className="app__tile"),
             #
                     dbc.Col([
                         html.Div([
-                            html.Div('Количество промахов в первую ночь', className="tile__title"),
+                            html.Div('Статистика отстрелов', className="tile__title"),
+                            html.Div('промахов в первую ночь', className="tile__title"),
                             html.Div(id="firstshots_miss", className="tile__value"),
-            #                 html.Div('Распределение отстрелов по боксам', className="tile__title"),
-            #                 dcc.Graph(id="firstshots_distribution", config={'displayModeBar': False}, style={'height':150, 'maxWidth':'100%'}),
+                            html.Div('Самый стреляемый игрок', className="tile__title"),
+                            html.Div(id="most_killed", className="tile__value"),
+                            html.Div('Шериф умирал в первую ночь 33 раза из 205', className="tile__title"),
+                            # html.Div(id="most_killed", className="tile__value"),
+                            html.Div('Распределение отстрелов по боксам', className="tile__title"),
+                            dcc.Graph(id="firstshots_distribution", config={'displayModeBar': False}, style={}),
                         ], style={'marginBottom': 10}, className="app__tile"),
                         html.Div([
                             html.Div('Убит в первую ночь', className="tile__title"),
                             html.Div(id="total_firstshot", className="tile__value"),
-            #                 dcc.Graph(id="shooting_target", config={'displayModeBar': False}),
+                            html.Div([
+                                dcc.Graph(id="shooting_target", config={'displayModeBar': False}),
+                            ], style={'textAlign': 'center', 'width':'100%'}),
+
                         ], className="app__tile"),
                     ], width=4),
             #
-                ], style={'dislay':'flex', 'gap':0},  className="")
+                ], style={'display':'flex', 'gap':0},  className="")
 
 
     ], className='app__content'),
@@ -235,10 +270,20 @@ app.layout = html.Div([
     html.Div([
         html.Div([
                 html.Div([
-                    html.Img(src='assets/img/logo_white.png', style={'width': '80px'}),
-                    html.P('©', style={'font-size':'15px', 'color': '#fff', 'margin':'0 10px'}),
-                    html.A("Перейти на сайт", href='https://statistics.shiffer.by/#/Turnir/41', target="_blank", className='link'),
-                ], style={'margin-top': '10px', 'display': 'flex', 'flex-direction': 'row', 'align-items': 'center', 'font-size': '15px', 'text-decoration': 'underline' }, className='footer')
+                    html.Img(src='assets/img/logo.png', style={'width': '80px'}),
+                    html.P('2024 ШIFFER Inc©. Информация носит ознакомительный характер.', style={'font-size':'15px', 'margin':'0 10px'}),
+                ], style={'margin-top': '10px', 'display': 'flex', 'flex-direction': 'row', 'align-items': 'center', 'font-size': '15px' }, className='footer'),
+                html.Div([
+                    html.P('Data Source:'),
+                    html.A("ShifferData", href='https://app.shiffer.info/#/turnirlist?type=15', target="_blank",
+                           className='link')
+                ], style={'text-align': 'center'}),
+
+                html.Div([
+                    html.P('Created by: '),
+                    html.P('Luterino', style={'fontWeight': 'bold'}),
+
+                ], style={'text-align': 'center'} )
             ], className='vrectangle')
     ], className='app__footer'),
 
@@ -372,6 +417,9 @@ def update_dashboard(*args):
     Output("cart_distibution", "children"),
     Output("firstshots_miss", "children"),
     Output("total_firstshot", "children"),
+    Output("shooting_target", "figure"),
+    Output("firstshots_distribution", "figure"),
+    Output("most_killed", "children"),
 
     Input('player-content', 'children')
 )
@@ -379,11 +427,12 @@ def update_players_dashboard(selected_player):
 
     if selected_player:
         selected_df = df_games[df_games['player_name'].isin([selected_player])]
+        shots_list = df_firstshots[df_firstshots['player_name'] == selected_player]['maf_in_best'].to_list()
+
 
     else:
         selected_df = df_games
-
-
+        shots_list = df_firstshots['maf_in_best'].to_list()
 
     winrate_df = selected_df['score'].value_counts(normalize=True).reset_index()
     winrate_value = (winrate_df[winrate_df['score'] == 1]['proportion'].values[0] * 100).astype(int)
@@ -397,6 +446,12 @@ def update_players_dashboard(selected_player):
 
     firstshots_miss_value = df_games.shape[0] / 10 - df_firstshots.shape[0]
 
+    fig_target = create_shooting_target(shots_list)
+    firstshot_by_box = df_firstshots.groupby('boxNumber')['id'].count().reset_index().rename(columns={'id': 'count'})
+    firstshots_distribution =  create_box_bars(firstshot_by_box['count'] , param="#295883")
+
+    most_killed = df_firstshots.groupby('player_name')['game_id'].count().reset_index().sort_values('game_id', ascending=False).head(1)['player_name'].values[0]
+
 
 
     return ( html.Div(selected_df['game_id'].nunique()),
@@ -404,12 +459,20 @@ def update_players_dashboard(selected_player):
              fig_winrate,
              cart_distibution,
              html.Div(firstshots_miss_value),
-             html.Div(df_firstshots[df_firstshots['player_name'] == selected_player].shape[0])
+             html.Div(df_firstshots[df_firstshots['player_name'] == selected_player].shape[0]),
+             fig_target,
+             firstshots_distribution,
+             html.Div(most_killed),
             )
 
-
-
-
+    # Callback для обновления визуализации
+@app.callback(
+    Output('circular-layout', 'figure'),
+    [Input('metric-selector', 'value')]
+)
+def update_figure(selected_metrics):
+    df = generate_sample_data()
+    return create_circular_layout(df, selected_metrics)
 
 
 

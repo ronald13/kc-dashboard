@@ -107,7 +107,7 @@ def create_timeline(df, selected_player=None):
             mode='markers',
             marker=dict(
                 color=colors,
-                size=16,
+                size=14,
                 line=dict(color='#f24236', width=2)
             ),
             customdata=np.stack(
@@ -165,7 +165,7 @@ def create_timeline(df, selected_player=None):
             showticklabels=False
         ),
         showlegend=False,
-        height=285,
+        height=200,
     )
 
     # Добавление аннотаций для первой и последней даты
@@ -329,7 +329,7 @@ def create_shooting_target(values):
             cmin=0,  # Устанавливаем минимальное значение цветовой шкалы
             cmax=3  # Устанавливаем максимальное значение цветовой шкалы
         ),
-        text=[f'Значение: {val}<br>Всего таких: {counts[val]}' for val in values],
+        text=[f'{val} черных в ЛХ<br>Всего: {counts[val]}' for val in values],
         hoverinfo='text'
     ))
 
@@ -372,7 +372,7 @@ def create_box_bars(values, param='#dsdss'):
         marker_color=colors,  # Используем список цветов
         name='expenses',
         hovertemplate='Бокс: ' + '<b>%{x}</b>' + '<br>' +
-                      'Сыграно: ' + '<b>%{y}</b>' +
+                      'Отстрел: ' + '<b>%{y}</b>' +
                       '<extra></extra>',
     ))
 
@@ -381,7 +381,7 @@ def create_box_bars(values, param='#dsdss'):
         textposition='outside'
     )
 
-    fig.update_yaxes(visible=False)
+    fig.update_yaxes(visible=False, range=[0, max(values) + 4])
     fig.update_xaxes(
         range=[0.5, 10.5],
         zeroline=False,
@@ -397,9 +397,116 @@ def create_box_bars(values, param='#dsdss'):
     )
 
     fig.update_layout(
-        height=200,
-        margin={'t': 40, 'r': 10, 'l': 10, 'b': 10, 'pad': 0},
+        xaxis_fixedrange=True, yaxis_fixedrange=True,
+        height=150,
+        margin={'t': 10, 'r': 10, 'l': 10, 'b': 10, 'pad': 0},
         showlegend=False,
+    )
+
+    return fig
+
+
+
+
+def create_circular_layout(df, selected_metrics):
+    # Рассчитываем координаты для размещения боксов по кругу
+    n_boxes = len(df)
+    radius = 1
+    start_angle = -np.pi / 2 - np.pi / 10
+    angles = np.linspace(start_angle, start_angle + 2 * np.pi, n_boxes, endpoint=False)
+
+    # Инвертируем порядок углов для движения по часовой стрелке
+    angles = angles[::-1]
+
+    x_coords = radius * np.cos(angles)
+    y_coords = radius * np.sin(angles)
+
+    fig = go.Figure()
+
+    # Добавляем центральный стол
+    fig.add_shape(
+        type="circle",
+        x0=-0.5, y0=-0.5,
+        x1=0.5, y1=0.5,
+        fillcolor="lightgray",
+        line_color="gray",
+    )
+
+    # Добавляем боксы
+    for i, (x, y) in enumerate(zip(x_coords, y_coords)):
+        box_data = df.iloc[i]
+
+        # Добавляем бокс
+        fig.add_trace(go.Scatter(
+            x=[x],
+            y=[y],
+            mode='markers+text',
+            marker=dict(
+                size=40,
+                color='#295883',
+                line=dict(color='rgb(25, 25, 25)', width=2)
+            ),
+            text=str(box_data['box_id']),
+            textposition="middle center",
+            textfont=dict(size=14, color='white'),
+            hoverinfo='skip',
+            name=f'Box {box_data["box_id"]}'
+        ))
+
+        # Добавляем аннотации для метрик
+        annotation_text = []
+        if 'win_rate' in selected_metrics:
+            annotation_text.append(f"WR: {box_data['win_rate']}")
+        if 'shots' in selected_metrics:
+            annotation_text.append(f"Shots: {box_data['shots']}")
+
+        if annotation_text:
+            # Рассчитываем позицию для аннотации (немного дальше от бокса)
+            annotation_radius = radius * 1.3
+            ann_x = annotation_radius * np.cos(angles[i])
+            ann_y = annotation_radius * np.sin(angles[i])
+
+            fig.add_annotation(
+                x=ann_x,
+                y=ann_y,
+                text='<br>'.join(annotation_text),
+                showarrow=True,
+                arrowhead=2,
+                arrowsize=1,
+                arrowwidth=2,
+                arrowcolor='#636363',
+                # color='#000',
+                ax=x * 40,
+                ay=-y * 40,
+                bordercolor='#c7c7c7',
+                borderwidth=2,
+                borderpad=4,
+                bgcolor='#ffffff',
+                opacity=0.8
+            )
+
+    # Настраиваем внешний вид
+    fig.update_layout(
+        margin={'t': 0, 'r': 10, 'l': 10, 'b': 10},
+        showlegend=False,
+        plot_bgcolor='white',
+        width=400,
+        height=400,
+        xaxis=dict(
+            range=[-2, 2],
+            showgrid=False,
+            zeroline=False,
+            showticklabels=False,
+            fixedrange=True
+        ),
+        yaxis=dict(
+            range=[-2, 2],
+            showgrid=False,
+            zeroline=False,
+            showticklabels=False,
+            fixedrange=True
+        ),
+
     )
 
     return fig
