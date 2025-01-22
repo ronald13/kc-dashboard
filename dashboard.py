@@ -1,19 +1,10 @@
 import os
 import pandas as pd
-import numpy as np
 import dash
-from dash import Dash, dcc, html, Input, Output, callback_context,State
+from dash import Dash, dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
-import plotly.graph_objects as go
-import plotly.express as px
-import plotly.figure_factory as ff
-from plotly.subplots import make_subplots
-# from prep import create_tornado, simple_bar, stacked_bar, simple_pie, draw_pie, make_spider, text_fig, create_box_bars, create_heatmap
-from styling import template, marker_color, marker_color_full, color_list
-from solver import Mafia, merge_two_dicts
 from prep import create_timeline, get_full_data, winrate_chart, create_cart_distibution, get_role, \
-    create_shooting_target, create_box_bars, create_circular_layout
-from loguru import logger
+    create_shooting_target, create_circular_layout
 import json
 
 
@@ -322,8 +313,6 @@ def update_dashboard(*args):
         if current_selection == selected_player:
             return [None, fig_timeline_preview, *([default_style] * len(players))]
 
-        selected_games = df_games[df_games['player_name'].isin([selected_player])]
-
         fig_timeline = create_timeline(top_players, selected_player=selected_player)
 
 
@@ -444,8 +433,6 @@ def update_players_dashboard(selected_player):
     firstshots_miss_value = df_games.shape[0] / 10 - df_firstshots.shape[0]
 
     fig_target = create_shooting_target(shots_list)
-    firstshot_by_box = df_firstshots.groupby('boxNumber')['id'].count().reset_index().rename(columns={'id': 'count'})
-    firstshots_distribution =  create_box_bars(firstshot_by_box['count'] , param="#295883")
 
     most_killed = df_firstshots.groupby('player_name')['game_id'].count().reset_index().sort_values('game_id', ascending=False).head(1)['player_name'].values[0]
     less_killed = df_firstshots[df_firstshots['player_name'].isin(top10_players)].groupby('player_name')['game_id'].count().reset_index().sort_values('game_id', ascending=True).head(1)['player_name'].values[0]
@@ -475,10 +462,10 @@ def update_figure(selected_metrics, selected_role):
 
     if selected_role:
         df_active = df_games[df_games['role_id'].isin(selected_role)]
-        df_firstshots_active = df_firstshots[df_firstshots['role_id'].isin(selected_role)]
+        # df_firstshots_active = df_firstshots[df_firstshots['role_id'].isin(selected_role)]
     else:
         df_active = df_games
-        df_firstshots_active = df_firstshots
+        # df_firstshots_active = df_firstshots
 
     total_winrate_by_box = df_active.groupby('boxNumber').agg(
         total_games=('who_win', 'count'),
@@ -492,21 +479,6 @@ def update_figure(selected_metrics, selected_role):
     total_circular = total_winrate_by_box.merge(total_shots_by_box, how='left', on='boxNumber')
     total_circular.rename(columns={'game_id': 'shots', 'total_winrate':'win_rate'}, inplace=True)
     total_circular['win_rate_num'] = total_circular['win_rate']
-
-    result = df_firstshots_active[df_firstshots_active['role_id'].isin([1,2,3,4])]
-    grouped = result.groupby(['boxNumber', 'role_id'])['game_id'].size().unstack(fill_value=0)
-
-
-    #
-    # # Группируем по boxNumber и role_id и считаем общее количество игр и побед
-    # grouped = df_games.groupby(['boxNumber', 'role_id']).agg(
-    #     total_games=('who_win', 'count'),
-    #     total_wins=('win_condition', 'sum')
-    # ).reset_index()
-
-    # Вычисляем процент побед
-    # grouped['win_percentage'] = ((grouped['total_wins'] / grouped['total_games']) * 100).round(2)
-
 
     return create_circular_layout(total_circular, selected_metrics)
 

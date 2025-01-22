@@ -1,8 +1,7 @@
 import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
-from dash import Dash, html
-import dash_bootstrap_components as dbc
+from dash import html
 from collections import Counter
 
 
@@ -220,8 +219,7 @@ def create_timeline(df, selected_player=None):
     )
 
     # Добавление аннотаций для первой и последней даты
-    first_date = df['game_date'].min().strftime('%Y-%m-%d')
-    last_date = df['game_date'].max().strftime('%Y-%m-%d')
+
     #
     # fig_timeline.add_annotation(
     #     x=first_date,
