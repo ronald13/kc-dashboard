@@ -11,5 +11,5 @@ services:
     entrypoint: ./entrypoint.sh
     restart: unless-stopped
     ports:
-      - "8053:8053"
+      - "8054:8054"
 
