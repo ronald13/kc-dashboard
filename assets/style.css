@@ -4,7 +4,13 @@ body{
      /*background-color: #f1f0f0;*/
      /*background-color: #282e38;*/
      font-family: 'Roboto';
+     color: #000;
 
+}
+
+._container{
+    max-width: 1680px;
+    margin: 0 auto;
 }
 p{
     margin-bottom: 0;
@@ -314,9 +320,8 @@ button{
 }
 .vrectangle{
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
+    justify-content: space-between;
+    align-items: center;
     padding: 16px 31px 21px 36px;
     border-radius: 15px;
     color: #313844;
@@ -352,7 +357,7 @@ button{
     font-size: 12px;
     margin-right: 10px;
     text-decoration: none;
-    color: white;
+
 }
 
 .main-svg{
@@ -494,11 +499,14 @@ button{
 .app__content{
     width: 100%;
     min-height: 400px;
+    margin-bottom: 10px;
 
 }
 
 .app__footer{
     width: 100%;
+    border-top:1px solid #dedede;
+    margin-top: 10px;
 }
 
 
@@ -507,7 +515,9 @@ button{
 }
 
 
-.checklist{
+.checklist,
+.role-checklist
+{
     /*display:flex;*/
     /*align-items: center;*/
     font-size: 14px;
@@ -515,7 +525,8 @@ button{
 
 }
 
-.checklist label{
+.checklist label,
+.role-checklist label{
    margin-right: 10px;
     display: inline-flex!important;
     align-items: center;
@@ -529,7 +540,7 @@ button{
      margin-right: 10px;
 }
 
-#TypeRefereeChart input[type="checkbox"]:checked ,
+#TypeRefereeChart input[type="checkbox"]:checked,
 .checklist input[type="checkbox"]:checked {
     accent-color: #f99746;
 }
@@ -621,6 +632,40 @@ button{
     width: 16px;
     height: 16px;
     border-radius: 4px;
+}
+
+#shooting_target .plot-container,
+#circular-layout .plot-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.checklist label input,
+.role-checklist label input{
+     width: 22px;
+     height:22px;
+     margin-right: 10px;
+}
+
+.checklist input[type="checkbox"]:checked {
+    accent-color: #f99746;
+}
+
+.role-checklist label:nth-of-type(1) input[type="checkbox"]:checked {
+    accent-color: #f24236;
+}
+
+.role-checklist label:nth-of-type(2) input[type="checkbox"]:checked {
+    accent-color: #295883;
+}
+
+.role-checklist label:nth-of-type(3) input[type="checkbox"]:checked {
+    accent-color: #efbf00;
+}
+
+.role-checklist label:nth-of-type(4) input[type="checkbox"]:checked {
+    accent-color: #cbe5f3;
 }
 
 

@@ -11,6 +11,36 @@ def get_role():
                          {'role_id': 3, 'role_name': 'Дон', 'color': '#efbf00'}, {'role_id': 4, 'role_name': 'Шериф', 'color': '#cbe5f3'}])
     return role
 
+
+def calcilate_Ci(row):
+    """
+    Рассчитывает значение Ci на основе условий для строки DataFrame.
+    """
+    # Константа для сравнения даты
+    date_threshold = pd.to_datetime('2024-05-25')
+
+    # Вычисление базового full_Ci
+    if row['game_date'] >= date_threshold:
+        full_Ci = row['total_kill_in_series'] * 0.6 / 2
+    else:
+        full_Ci = row['total_kill_in_series'] * 0.4 / 2
+
+    # Определение множителя на основе условий
+    if row['maf_in_best'] >= 1 and row['who_win'] == 1:
+        modifier = 1
+    elif row['maf_in_best'] >= 1 and row['who_win'] == 0:
+        modifier = 0.5
+    elif row['maf_in_best'] == 0 and row['who_win'] == 1:
+        modifier = 0.5
+    elif row['maf_in_best'] == 0 and row['who_win'] == 0:
+        modifier = 0.25
+    else:
+        modifier = 0  # На случай, если ни одно условие не выполнено (защитный код)
+
+    # Итоговое значение Ci
+    return full_Ci * modifier
+
+
 def get_full_data(data):
     df_games = pd.json_normalize(
         data,
@@ -31,25 +61,14 @@ def get_full_data(data):
     col_for_remane = {'gameplayer_date': 'game_date', 'gameplayer_club_id': 'series_id', 'PlayerName': 'player_name',
            'gameplayer_winner_id': 'who_win', 'best': 'marked_in_best'}
     df_games = df_games[columns].rename(columns=col_for_remane)
+    df_games['game_date'] = pd.to_datetime(df_games['game_date'])
 
     df_firstshots = pd.json_normalize(
     [game['gamefirstshot'] for game in data if 'gamefirstshot' in game]
     )
     df_firstshots.rename(columns={'score': 'score_firstshot'}, inplace=True)
 
-    df_games = df_games.merge(df_firstshots[['game_id', 'player_id', 'score_firstshot']], on=['game_id', 'player_id'], how='left')
-    df_games['score_firstshot'] = df_games['score_firstshot'].fillna(0)
-
-    df_games['score'] = df_games['score'].astype(float)
-    df_games['score_dop'] = df_games['score_dop'].astype(float)
-    df_games['score_minus'] = df_games['score_minus'].astype(float)
-    df_games['score_firstshot'] = df_games['score_firstshot'].astype(float)
-
-    df_games['total_score'] = df_games['score'] + df_games['score_dop'] + df_games['score_minus'] + df_games[
-        'score_firstshot']
-
     best_roles_dict = df_games[df_games['marked_in_best'] == 1].groupby('game_id')['role_id'].agg(list).to_dict()
-
     # Применяем словарь к датафрейму
     df_games['best_roles'] = df_games['game_id'].map(best_roles_dict)
 
@@ -62,10 +81,42 @@ def get_full_data(data):
     # Добавляем столбец с подсчетом мафиозных ролей среди лучших игроков
     df_games['maf_in_best'] = df_games['best_roles'].apply(count_mafia_roles)
 
+    # Добавляем столбец с который показывает
+    df_games['win_condition'] = np.where(
+        ((df_games['role_id'].isin([1, 4])) & (df_games['who_win'] == 0)) |
+        ((df_games['role_id'].isin([2, 3])) & (df_games['who_win'] == 1)),
+        1,
+        0
+    )
 
-    df_games['game_date'] = pd.to_datetime(df_games['game_date'])
+    df_firstshots = df_firstshots.merge(df_games[
+                                            ['game_id', 'game_date', 'player_id', 'player_name', 'role_id', 'who_win',
+                                             'best_roles', 'maf_in_best']],
+                                        on=['game_id', 'player_id'], how='left')
 
-    return df_games
+    # добавляем столбец total_kill_in_series чтобы посчитать общее количество убийств игрока в серии
+    df_firstshots['total_kill_in_series'] = df_firstshots.groupby(['game_date', 'player_name'])['game_id'].transform(
+        'count')
+    # df_firstshots['game_date'] = pd.to_datetime(df_firstshots['game_date'])
+
+
+    df_firstshots['Ci'] = df_firstshots.apply(calcilate_Ci, axis=1)
+
+    df_games = df_games.merge(df_firstshots[['game_id', 'player_id', 'score_firstshot', 'Ci']],
+                              on=['game_id', 'player_id'], how='left')
+
+    df_games['score_firstshot'] = df_games['score_firstshot'].fillna(0)
+    df_games['Ci'] = df_games['Ci'].fillna(0)
+
+    df_games['score'] = df_games['score'].astype(float)
+    df_games['score_dop'] = df_games['score_dop'].astype(float)
+    df_games['score_minus'] = df_games['score_minus'].astype(float)
+    df_games['score_firstshot'] = df_games['score_firstshot'].astype(float)
+
+    df_games['total_score'] = df_games['score'] + df_games['score_dop'] + df_games['score_minus'] + df_games[
+        'score_firstshot'] + df_games['Ci']
+
+    return df_games, df_firstshots
 
 
 def create_timeline(df, selected_player=None):
@@ -108,7 +159,7 @@ def create_timeline(df, selected_player=None):
             marker=dict(
                 color=colors,
                 size=14,
-                line=dict(color='#f24236', width=2)
+                line=dict(color='#f24236', width=0)
             ),
             customdata=np.stack(
                 (df['player_name'].astype('str'),
@@ -406,7 +457,21 @@ def create_box_bars(values, param='#dsdss'):
     return fig
 
 
+def get_box_color(box_data, df, metric):
+    if metric == 'win_rate':
+        value = box_data['win_rate_num']
+        max_val = df['win_rate_num'].max()
+        min_val = df['win_rate_num'].min()
+    else:  # shots
+        value = box_data['shots']
+        max_val = df['shots'].max()
+        min_val = df['shots'].min()
 
+    if value == max_val:
+        return 'rgb(46, 184, 46)'  # Зеленый для максимума
+    elif value == min_val:
+        return 'rgb(220, 53, 69)'  # Красный для минимума
+    return 'rgb(55, 128, 191)'  # Станда
 
 def create_circular_layout(df, selected_metrics):
     # Рассчитываем координаты для размещения боксов по кругу
@@ -435,7 +500,15 @@ def create_circular_layout(df, selected_metrics):
     # Добавляем боксы
     for i, (x, y) in enumerate(zip(x_coords, y_coords)):
         box_data = df.iloc[i]
+        # Определяем цвет бокса на основе выбранных метрик
+        box_color = 'rgb(55, 128, 191)'  # Стандартный цвет
 
+        if selected_metrics:
+            for metric in selected_metrics:
+                new_color = get_box_color(box_data, df, metric)
+                if new_color != 'rgb(55, 128, 191)':  # Если найден экстремум
+                    box_color = new_color
+                    break
         # Добавляем бокс
         fig.add_trace(go.Scatter(
             x=[x],
@@ -443,22 +516,22 @@ def create_circular_layout(df, selected_metrics):
             mode='markers+text',
             marker=dict(
                 size=40,
-                color='#295883',
+                color=box_color,
                 line=dict(color='rgb(25, 25, 25)', width=2)
             ),
-            text=str(box_data['box_id']),
+            text=str(box_data['boxNumber'].astype(int)),
             textposition="middle center",
             textfont=dict(size=14, color='white'),
             hoverinfo='skip',
-            name=f'Box {box_data["box_id"]}'
+            name=f'Box {box_data["boxNumber"].astype(int)}'
         ))
 
         # Добавляем аннотации для метрик
         annotation_text = []
         if 'win_rate' in selected_metrics:
-            annotation_text.append(f"WR: {box_data['win_rate']}")
+            annotation_text.append(f"WR: <b>{box_data['win_rate']}%</b>")
         if 'shots' in selected_metrics:
-            annotation_text.append(f"Shots: {box_data['shots']}")
+            annotation_text.append(f"Отстрелы: <b>{box_data['shots'].astype(int)}</b>")
 
         if annotation_text:
             # Рассчитываем позицию для аннотации (немного дальше от бокса)
@@ -490,8 +563,8 @@ def create_circular_layout(df, selected_metrics):
         margin={'t': 0, 'r': 10, 'l': 10, 'b': 10},
         showlegend=False,
         plot_bgcolor='white',
-        width=400,
-        height=400,
+        width=450,
+        height=450,
         xaxis=dict(
             range=[-2, 2],
             showgrid=False,
