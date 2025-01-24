@@ -5,9 +5,16 @@ from dash import html
 from collections import Counter
 
 
+MAFIA_COLOR = '#295883'
+CITIZEN_COLOR = '#f24236'
+SHERIFF_COLOR = '#cbe5f3'
+DON_COLOR = '#efbf00'
+
+GREEN_COLOR = '#49A078'
+
 def get_role():
-    role = pd.DataFrame([{'role_id': 1, 'role_name': 'Мирный', 'color': '#f24236'}, {'role_id': 2, 'role_name': 'Мафия', 'color': '#295883'},
-                         {'role_id': 3, 'role_name': 'Дон', 'color': '#efbf00'}, {'role_id': 4, 'role_name': 'Шериф', 'color': '#cbe5f3'}])
+    role = pd.DataFrame([{'role_id': 1, 'role_name': 'Мирный', 'short_name': 'Мир',  'color': '#f24236'}, {'role_id': 2, 'role_name': 'Мафия', 'short_name': 'Маф', 'color': '#295883'},
+                         {'role_id': 3, 'role_name': 'Дон', 'short_name': 'Дон', 'color': '#efbf00'}, {'role_id': 4, 'role_name': 'Шериф', 'short_name': 'Шер', 'color': '#cbe5f3'}])
     return role
 
 
@@ -313,6 +320,31 @@ def create_cart_distibution(df):
     ])
     return layout
 
+def create_winrate_distibution(df):
+    # Создаем элементы легенды
+    legend_items = []
+    for _, role in df.iterrows():
+        legend_items.append(
+            html.Div([
+                html.Div(
+                    className='legend-color',
+                    style={
+                        'background-color': role.color
+                    }
+                ),
+                html.Span(f'{role["short_name"]} {role["proportion"]}%')
+            ], className='legend-item', style={'margin-bottom':4})
+        )
+
+    layout = html.Div([
+        html.Div([
+            # Легенда
+            html.Div(legend_items, className='legend-column')
+
+        ], className='container')
+    ])
+    return layout
+
 def create_shooting_target(values):
 
     counts = Counter(values)
@@ -466,10 +498,10 @@ def get_box_color(box_data, df, metric):
         min_val = df['shots'].min()
 
     if value == max_val:
-        return 'rgb(46, 184, 46)'  # Зеленый для максимума
+        return GREEN_COLOR  # Зеленый для максимума
     elif value == min_val:
-        return 'rgb(220, 53, 69)'  # Красный для минимума
-    return 'rgb(55, 128, 191)'  # Станда
+        return CITIZEN_COLOR  # Красный для минимума
+    return SHERIFF_COLOR  # Станда
 
 def create_circular_layout(df, selected_metrics):
     # Рассчитываем координаты для размещения боксов по кругу
@@ -499,12 +531,12 @@ def create_circular_layout(df, selected_metrics):
     for i, (x, y) in enumerate(zip(x_coords, y_coords)):
         box_data = df.iloc[i]
         # Определяем цвет бокса на основе выбранных метрик
-        box_color = 'rgb(55, 128, 191)'  # Стандартный цвет
+        box_color = "#574964"  # Standart box color
 
         if selected_metrics:
             for metric in selected_metrics:
                 new_color = get_box_color(box_data, df, metric)
-                if new_color != 'rgb(55, 128, 191)':  # Если найден экстремум
+                if new_color != SHERIFF_COLOR:  # Если найден экстремум
                     box_color = new_color
                     break
         # Добавляем бокс
@@ -581,3 +613,12 @@ def create_circular_layout(df, selected_metrics):
     )
 
     return fig
+
+
+def number_win_series(df):
+    # Шаг 1: Группируем по game_date и player_name и считаем сумму total_score
+    summed_scores = df.groupby(['game_date', 'player_name'], as_index=False)['total_score'].sum()
+
+    # Для каждого 'game_date' находим игрока с максимальным 'total_score'
+    max_scores = summed_scores.loc[summed_scores.groupby('game_date')['total_score'].idxmax()]
+    return max_scores['player_name'].value_counts().reset_index(name='count')

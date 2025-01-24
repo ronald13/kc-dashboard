@@ -4,7 +4,7 @@ import dash
 from dash import Dash, dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
 from prep import create_timeline, get_full_data, winrate_chart, create_cart_distibution, get_role, \
-    create_shooting_target, create_circular_layout
+    create_shooting_target, create_circular_layout, create_winrate_distibution, number_win_series
 import json
 
 
@@ -55,7 +55,6 @@ top_players = top_players.groupby(['game_date', 'player_name']).agg(total_score=
                                                                         game_count=(
                                                                         'game_id', 'nunique'), ).reset_index()
 
-print(top10_players)
 # =====================================================================
 #                               GENERATE FIGURES
 # =====================================================================
@@ -175,11 +174,23 @@ app.layout = html.Div([
                             html.Div(id="cart_distibution", className="")
                         ], style={'marginBottom':10}, className="app__tile"),
                         html.Div([
-                            html.Div('Винрейт', className="tile__title"),
-                            html.Div(id="total_winrate", className="tile__value"),
+                            dbc.Row([
+                               dbc.Col([
+                                   html.Div('Винрейт', className="tile__title"),
+                                   html.Div(id="total_winrate", className="tile__value"),
+                               ],md=8),
+                               dbc.Col([
+                                    html.Div(id="winrate_distibution", className=""),
+                               ], style={'margin-top':5})
+                            ]),
+
                             html.Div(id="winrate_chart")
                         #
-                        ], className="app__tile"),
+                        ], style={'marginBottom':10}, className="app__tile"),
+                        html.Div([
+                            html.Div('Дополнительные факты:', className="tile__title"),
+                            html.Div(' - Шериф умирал в первую ночь 33 раза из 205', className="tile__title"),
+                        ], style={'marginBottom':10}, className="app__tile"),
 
 
                     ], width=4
@@ -195,7 +206,7 @@ app.layout = html.Div([
                                     ],
                                     value=[],
                                     inline=True,
-                                    style={'color': '#000', 'text-align': 'left'},
+                                    style={'color': '#000', 'text-align': 'left', 'margin-bottom':10},
                                     className='checklist',
                                 ),
                                 dcc.Checklist(
@@ -215,29 +226,12 @@ app.layout = html.Div([
                                 dcc.Graph(id='circular-layout', config={'displayModeBar': False}),
 
                             ], style={'width': '100%', 'textAlign': 'center'}),
-                        html.Div('Дополнительные факты:', className="tile__title"),
-                        html.Div(' - Шериф умирал в первую ночь 33 раза из 205', className="tile__title"),
-
-
-
 
                     ], style={},  width=4, className="app__tile"),
             #
                     dbc.Col([
-                        dbc.Row([
-                            dbc.Col([
-                                html.Div('Самый стреляемый', className="tile__title", style={'white-space':'nowrap'}),
-                                html.Div(id="most_killed", className="tile__value", style={'font-size':24, 'margin-top':10}),
-                            ], className="app__tile"),
-                            dbc.Col([
-                                html.Div('Самый нестреляемый', className="tile__title", style={'white-space':'nowrap'}),
-                                html.Div(id="less_killed", className="tile__value", style={'font-size':24, 'margin-top':10}),
-                            ], className="app__tile"),
-                            dbc.Col([
-                                html.Div('Промахов ', className="tile__title"),
-                                html.Div(id="firstshots_miss", className="tile__value"),
-                            ], className="app__tile"),
-                        ], style={'gap':10, 'margin':"0 0 10px 0"}),
+                        html.Div(id='killed_row'),
+
                         html.Div([
                             html.Div('Убит в первую ночь', className="tile__title"),
                             html.Div(id="total_firstshot", className="tile__value"),
@@ -400,12 +394,14 @@ def update_dashboard(*args):
     Output("total_winrate", "children"),
     Output("winrate_chart", "children"),
     Output("cart_distibution", "children"),
-    Output("firstshots_miss", "children"),
+    Output("winrate_distibution", "children"),
+
     Output("total_firstshot", "children"),
     Output("shooting_target", "figure"),
     # Output("firstshots_distribution", "figure"),
-    Output("most_killed", "children"),
-    Output("less_killed", "children"),
+    # Output("most_killed", "children"),
+    # Output("less_killed", "children"),
+    Output("killed_row", "children"),
 
     Input('player-content', 'children')
 )
@@ -421,66 +417,114 @@ def update_players_dashboard(selected_player):
         shots_list = df_firstshots['maf_in_best'].to_list()
 
     winrate_df = selected_df['score'].value_counts(normalize=True).reset_index()
-    winrate_value = (winrate_df[winrate_df['score'] == 1]['proportion'].values[0] * 100).astype(int)
+    winrate_value = (winrate_df[winrate_df['score'] == 1]['proportion'].values[0] * 100).round(0).astype(int)
+
     fig_winrate = winrate_chart(winrate_value)
+    winrate_by_cart = (selected_df.groupby('role_id')['win_condition'].value_counts(normalize=True) * 100).round(2).reset_index()
+    winrate_by_cart=winrate_by_cart.loc[winrate_by_cart['win_condition'] == 1].merge(get_role(), on='role_id', how='left')
 
 
     drawn_cards = (selected_df['role_id'].value_counts(normalize=True) * 100).round(0).astype(int).reset_index().rename(columns={'proportion': 'count'})
     drawn_cards = drawn_cards.merge(get_role(), on='role_id', how='left')
     cart_distibution = create_cart_distibution(drawn_cards)
 
+    winrate_distibution = create_winrate_distibution(winrate_by_cart)
 
-    firstshots_miss_value = df_games.shape[0] / 10 - df_firstshots.shape[0]
+
+    firstshots_miss_value = df_games.shape[0] / 10 - df_firstshots.dropna(subset=['player_id', 'player_name']).shape[0]
+
 
     fig_target = create_shooting_target(shots_list)
 
     most_killed = df_firstshots.groupby('player_name')['game_id'].count().reset_index().sort_values('game_id', ascending=False).head(1)['player_name'].values[0]
     less_killed = df_firstshots[df_firstshots['player_name'].isin(top10_players)].groupby('player_name')['game_id'].count().reset_index().sort_values('game_id', ascending=True).head(1)['player_name'].values[0]
 
+    win_series = number_win_series(selected_df)
 
+    killed_row_general = dbc.Row([
+        dbc.Col([
+            html.Div('Самый стреляемый', className="tile__title", style={'white-space': 'nowrap'}),
+            html.Div(most_killed, className="tile__value", style={'font-size': 24, 'margin-top': 10}),
+        ], className="app__tile"),
+        dbc.Col([
+            html.Div('Самый нестреляемый', className="tile__title", style={'white-space': 'nowrap'}),
+            html.Div(less_killed, className="tile__value", style={'font-size': 24, 'margin-top': 10}),
+        ], className="app__tile"),
+        dbc.Col([
+            html.Div('Промахов', className="tile__title"),
+            html.Div(firstshots_miss_value, className="tile__value"),
+        ], className="app__tile"),
+    ], style={'gap': 10, 'margin': "0 0 10px 0"}),
+
+    killed_row_player = dbc.Row([
+        dbc.Col([
+            html.Div('Выиграно серий', className="tile__title", style={'white-space': 'nowrap'}),
+            html.Div(win_series['count'].values[0], className="tile__value", style={'font-size': 24, 'margin-top': 10}),
+        ], className="app__tile"),
+    ], style={'gap': 10, 'margin': "0 0 10px 0"})
 
     return ( html.Div(selected_df['game_id'].nunique()),
              html.Div(f"{winrate_value}%"),
              fig_winrate,
              cart_distibution,
-             html.Div(firstshots_miss_value),
+             winrate_distibution if selected_player else html.Div(),
+             # html.Div(firstshots_miss_value),
              html.Div(df_firstshots[df_firstshots['player_name'] == selected_player].shape[0]),
              fig_target,
              # firstshots_distribution,
-             html.Div(most_killed),
-             html.Div(less_killed),
+             # html.Div(most_killed),
+             killed_row_player if selected_player else killed_row_general,
             )
 
-    # Callback для обновления визуализации
 @app.callback(
     Output('circular-layout', 'figure'),
     Input('metric-selector', 'value'),
     Input('role-selector', 'value'),
+    Input('player-content', 'children')
 
 )
-def update_figure(selected_metrics, selected_role):
+def update_figure(selected_metrics, selected_role, selected_player):
 
-    if selected_role:
-        df_active = df_games[df_games['role_id'].isin(selected_role)]
-        # df_firstshots_active = df_firstshots[df_firstshots['role_id'].isin(selected_role)]
+    def update_role_values(value):
+        all_values = [1, 2, 3, 4]
+        if not value:  # Если ничего не выбрано
+            return all_values
+        elif set(value) == set(all_values):  # Если выбраны все опции
+            return all_values
+        return value
+    selected_roles = update_role_values(selected_role)
+    if selected_player:
+        df_active = df_games[df_games['player_name'].isin([selected_player]) & (df_games['role_id'].isin(selected_roles))]
+        df_firstshots_active = df_firstshots[df_firstshots['player_name'].isin([selected_player]) & (df_firstshots['role_id'].isin(selected_roles))]
     else:
-        df_active = df_games
-        # df_firstshots_active = df_firstshots
+        df_active = df_games[df_games['role_id'].isin(selected_roles)]
+        df_firstshots_active = df_firstshots[df_firstshots['role_id'].isin(selected_roles)]
+
+    # create the DataFrame with only boxNumber columns to avoid missing boxes
+    result_df = pd.DataFrame({'boxNumber':range(1,11)})
+
+    # if selected_role
 
     total_winrate_by_box = df_active.groupby('boxNumber').agg(
         total_games=('who_win', 'count'),
         total_wins=('win_condition', 'sum')
     ).reset_index()
 
-    total_winrate_by_box['total_winrate'] = (
+    total_winrate_by_box['win_rate'] = (
                 (total_winrate_by_box['total_wins'] / total_winrate_by_box['total_games']) * 100).round(1)
 
-    total_shots_by_box = df_firstshots[df_firstshots['role_id'].isin([1, 4])].groupby('boxNumber')['game_id'].size()
+
+    total_shots_by_box = df_firstshots_active.groupby('boxNumber')['game_id'].size().reset_index(name='shots')
+    result_df = result_df.merge(total_winrate_by_box, on='boxNumber', how='left').merge(total_shots_by_box, on='boxNumber', how='left').fillna(0)
+
     total_circular = total_winrate_by_box.merge(total_shots_by_box, how='left', on='boxNumber')
     total_circular.rename(columns={'game_id': 'shots', 'total_winrate':'win_rate'}, inplace=True)
-    total_circular['win_rate_num'] = total_circular['win_rate']
+    result_df['win_rate_num'] = result_df['win_rate']
 
-    return create_circular_layout(total_circular, selected_metrics)
+
+
+
+    return create_circular_layout(result_df, selected_metrics)
 
 
 
