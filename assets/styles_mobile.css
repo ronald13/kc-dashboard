@@ -1,0 +1,69 @@
+/* Медиа-запросы для адаптивности */
+@media (max-width: 768px) {
+    /* Стили для планшетов и мобильных */
+    #player-box img {
+        width: 60px !important;
+        height: 60px !important;
+    }
+
+    #player-box {
+        width: 80px !important;
+        height: 100px !important;
+    }
+
+    .players_list,
+    .timeline_list{
+        margin: 0 -10px;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Стили для мобильных */
+    #player-box img {
+        width: 50px !important;
+        height: 50px !important;
+    }
+
+    #player-box {
+        width: 70px !important;
+        height: 90px !important;
+    }
+}
+
+/* Стили для скролла */
+.app__content {
+    max-width: 100%;
+}
+
+/* Стилизация скроллбара */
+/*::-webkit-scrollbar {*/
+/*    height: 2px;*/
+/*}*/
+
+/*::-webkit-scrollbar-track {*/
+/*    background: #f1f1f1;*/
+/*}*/
+
+/*::-webkit-scrollbar-thumb {*/
+/*    background: #888;*/
+/*    border-radius: 4px;*/
+/*}*/
+
+/*::-webkit-scrollbar-thumb:hover {*/
+/*    background: #555;*/
+/*}*/
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+/* Для Firefox */
+.app__content {
+    scrollbar-width: none;
+}
+
+/* Для IE и Edge */
+.app__content {
+    -ms-overflow-style: none;
+}
