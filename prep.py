@@ -119,6 +119,8 @@ def get_full_data(data):
     df_games['score_minus'] = df_games['score_minus'].astype(float)
     df_games['score_firstshot'] = df_games['score_firstshot'].astype(float)
 
+    df_games['only_dops'] = df_games['score_dop'] + df_games['score_minus'] + df_games['score_firstshot']
+
     df_games['total_score'] = df_games['score'] + df_games['score_dop'] + df_games['score_minus'] + df_games[
         'score_firstshot'] + df_games['Ci']
 
@@ -216,10 +218,12 @@ def create_timeline(df, selected_player=None):
             tickangle=0,
             tickfont=dict(size=12),
             showgrid=False,
+            fixedrange = True
         ),
         yaxis=dict(
             title='',
-            showticklabels=False
+            showticklabels=False,
+            fixedrange=True
         ),
         showlegend=False,
         height=200,
