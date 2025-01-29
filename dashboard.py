@@ -173,9 +173,9 @@ app.layout = html.Div([
                 ],
                     className="players_list", style={'flex-wrap': 'nowrap', 'min-width': '1200px'}
                 ),
-            ], style={'overflow-x': 'auto', 'margin': '0 -15px'}),
+            ], style={'overflow-x': 'auto', 'margin': '0 10px'}),
 
-        # Контейнер для графика с горизонтальным скроллом
+
             html.Div([
                 dbc.Row([
                     dbc.Col([
@@ -183,7 +183,7 @@ app.layout = html.Div([
                     ], width=10)
                 ], className="timeline_list", style={ 'margin-bottom':30}),
 
-            ], style={'overflow-x': 'auto', 'margin': '0 -15px'}),
+            ], style={'overflow-x': 'auto'}),
 
 
 
@@ -263,8 +263,8 @@ app.layout = html.Div([
                                 html.Div(id="total_firstshot", className="tile__value"),
                                 html.Div([
                                     dcc.Graph(id="shooting_target", config={'displayModeBar': False}),
-                                ], className="text-center w-100"),
-                            ], className="app__tile"),
+                                ], className="text-center w-100", style={'position': 'absolute', 'top': 20, 'right': 0}),
+                            ], className="app__tile", style={'position':'relative', 'height':280}),
                         ], className="h-100"),
                     ], xs=12, md=4),
             #
@@ -279,18 +279,18 @@ app.layout = html.Div([
                 html.Div([
                     html.Img(src='assets/img/logo.png', style={'width': '80px'}),
                     html.P('2024 ШIFFER Inc©. Информация носит ознакомительный характер.', style={'font-size':'15px', 'margin':'0 10px'}),
-                ], style={'margin-top': '10px', 'display': 'flex', 'flex-direction': 'row', 'align-items': 'center', 'font-size': '15px' }, className='footer'),
+                ], style={'margin-top': '10px', 'display': 'flex', 'flex-direction': 'row', 'align-items': 'flex-start', 'font-size': '15px' }, className='footer'),
                 html.Div([
                     html.P('Data Source:'),
                     html.A("ShifferData", href='https://app.shiffer.info/#/turnirlist?type=15', target="_blank",
                            className='link')
-                ], style={'text-align': 'center'}),
+                ], className='data_links',  style={'text-align': 'center'}),
 
                 html.Div([
                     html.P('Created by: '),
                     html.P('Luterino', style={'fontWeight': 'bold'}),
 
-                ], style={'text-align': 'center'} )
+                ], className='data_links', style={'text-align': 'center'} )
             ], className='vrectangle')
     ], className='app__footer'),
 

@@ -155,7 +155,7 @@ def create_timeline(df, selected_player=None):
     else:
         colors = '#f24236'
 
-        # Создание графика с помощью Plotly
+
     fig_timeline = go.Figure()
 
     # Добавляем точки на график
@@ -196,9 +196,11 @@ def create_timeline(df, selected_player=None):
                                 freq='MS')
     # Сдвигаем метки на середину месяца
     month_labels = month_labels + pd.Timedelta(days=14)  # примерно середина месяца
+    print(month_labels)
 
     # Добавляем вертикальные линии для каждого месяца
     for date in month_lines[1:]:
+
         fig_timeline.add_vline(
             x=date,
             line_width=1,
@@ -209,16 +211,17 @@ def create_timeline(df, selected_player=None):
 
     # Настройка осей и внешнего вида
     fig_timeline.update_layout(
-        margin={'t': 10, 'b': 10, 'l': 10, 'r': 10},
+        margin={'t': 10, 'b': 10, 'l': 0, 'r': 0},
         xaxis=dict(
             showticklabels=True,
             tickmode='array',
-            ticktext=[d.strftime('%B %Y') for d in month_labels],
-            tickvals=month_labels,  # используем сдвинутые даты для меток
+            ticktext=[d.strftime('%B %Y') for d in month_labels[1:]],
+            tickvals=month_labels[1:],  # используем сдвинутые даты для меток
             tickangle=0,
             tickfont=dict(size=12),
             showgrid=False,
-            fixedrange = True
+            fixedrange = True,
+            range=['2024-03-23 00:00:00', '2025-01-29 00:00:00']
         ),
         yaxis=dict(
             title='',
@@ -228,29 +231,6 @@ def create_timeline(df, selected_player=None):
         showlegend=False,
         height=200,
     )
-
-    # Добавление аннотаций для первой и последней даты
-
-    #
-    # fig_timeline.add_annotation(
-    #     x=first_date,
-    #     y=0,
-    #     text=first_date,
-    #     showarrow=False,
-    #     xshift=-50,  # Сдвиг аннотации влево
-    #     yanchor="middle",
-    #     font_size = 16
-    # )
-    # fig_timeline.add_annotation(
-    #     x=last_date,
-    #     y=0,
-    #     text=last_date,
-    #     showarrow=False,
-    #     xshift=50,  # Сдвиг аннотации вправо
-    #     yanchor="middle",
-    #     font_size=16,
-    #
-    # )
 
     return fig_timeline
 
@@ -425,7 +405,9 @@ def create_shooting_target(values):
             range=[-3.5, 3.5],
             zeroline=False,
             showgrid=False,
-            showticklabels=False
+            showticklabels=False,
+            fixedrange=True
+
         ),
         yaxis=dict(
             range=[-3.5, 3.5],
@@ -433,10 +415,11 @@ def create_shooting_target(values):
             showgrid=False,
             showticklabels=False,
             scaleanchor='x',  # делаем круги круглыми
-            scaleratio=1
+            scaleratio=1,
+            fixedrange=True
         ),
-        width=300,
-        height=300,
+        width=250,
+        height=250,
         showlegend=False
     )
     return fig
@@ -597,8 +580,8 @@ def create_circular_layout(df, selected_metrics):
         margin={'t': 0, 'r': 10, 'l': 10, 'b': 10},
         showlegend=False,
         plot_bgcolor='white',
-        width=450,
-        height=450,
+        width=400,
+        height=400,
         xaxis=dict(
             range=[-2, 2],
             showgrid=False,

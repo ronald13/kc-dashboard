@@ -16,6 +16,11 @@
         margin: 0 -10px;
         justify-content: space-between;
     }
+
+    .footer p,
+    .data_links{
+        display: none;
+    }
 }
 
 @media (max-width: 480px) {
