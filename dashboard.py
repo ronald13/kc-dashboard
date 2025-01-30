@@ -62,6 +62,17 @@ top_players = top_players.groupby(['game_date', 'player_name']).agg(total_score=
                                                                         game_count=(
                                                                         'game_id', 'nunique'), ).reset_index()
 
+df_sum = df_games.groupby(['series_id', 'player_id'], as_index=False)['total_score'].sum()
+
+# 2. Присваиваем место в серии (ранг) только уникальным игрокам
+df_sum['place_in_series'] = df_sum.groupby('series_id')['total_score'].rank(ascending=False, method='min').astype(int)
+
+# 3. Объединяем обратно с исходным df по 'series_id' и 'player_id'
+df1 = df_games.merge(df_sum[['series_id', 'player_id', 'place_in_series']], on=['series_id', 'player_id'], how='left')
+
+top_players = top_players.merge(df1[['game_date', 'series_id', 'player_name', 'place_in_series']], on=['game_date', 'player_name'], how='left').drop_duplicates()
+
+
 
 # generate players list with top10
 players = [
@@ -117,8 +128,7 @@ app.layout = html.Div([
     # HEADER INFO
     html.Div([
         html.H1('Капитанский стол 3.0', style={'line-height': '1.1', 'letter-spacing': '-0.81px', 'color': '#f24236',
-                                              'font-family': 'Roboto', 'font-size': '42px', 'font-weight': 'bold',
-                                              'margin': '0 0 0 0', 'text-transform': 'uppercase'}),
+                                              'font-family': 'Roboto', 'text-transform': 'uppercase'}),
 
         html.P('#кc2024 #брест #сезон3 #топ10',
                style={'width': '350px', 'font-size': '14px',
@@ -171,7 +181,7 @@ app.layout = html.Div([
 
                     ) for i, player in enumerate(players)
                 ],
-                    className="players_list", style={'flex-wrap': 'nowrap', 'min-width': '1200px'}
+                    className="players_list", style={'flex-wrap': 'nowrap', 'min-width': '1200px', 'padding': '0 15px'}
                 ),
             ], style={'overflow-x': 'auto', 'margin': '0 10px'}),
 
@@ -201,14 +211,14 @@ app.layout = html.Div([
 
                             html.Div([
                                 dbc.Row([
-                                   dbc.Col([
-                                       html.Div('Винрейт', className="tile__title"),
-                                       html.Div(id="total_winrate", className="tile__value"),
-                                   ],md=8),
-                                   dbc.Col([
-                                        html.Div(id="winrate_distibution", className=""),
-                                   ], className="mt2"),
-                                ]),
+                                    dbc.Col([
+                                        html.Div('Винрейт', className="tile__title"),
+                                        html.Div(id="total_winrate", className="tile__value"),
+                                    ], xs=8, className="d-flex flex-column justify-content-center"),
+                                    dbc.Col([
+                                        html.Div(id="winrate_distibution", className="h-100 d-flex align-items-center"),
+                                    ], xs=4, className="ps-0"),
+                                ], className="flex-nowrap"),
                                 html.Div(id="winrate_chart")
                             ], className="app__tile mb-3"),
 

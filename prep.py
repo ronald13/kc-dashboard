@@ -124,17 +124,22 @@ def get_full_data(data):
     df_games['total_score'] = df_games['score'] + df_games['score_dop'] + df_games['score_minus'] + df_games[
         'score_firstshot'] + df_games['Ci']
 
+
+    # add place for player in series
+
+
+
+
     return df_games, df_firstshots
 
 
 def create_timeline(df, selected_player=None):
     # Преобразование строковых дат в формат datetime
-    df['game_date'] = pd.to_datetime(df['game_date'])
+    # df['game_date'] = pd.to_datetime(df['game_date'])
     df.sort_values(by=['game_date', 'total_score'], ascending=[True, True] , inplace=True)
 
     # Группировка по дате и подсчет количества событий на каждую дату
     grouped = df.groupby('game_date').size()
-
 
     # Создание координат для точек с симметрией
     x_coords = []
@@ -151,7 +156,16 @@ def create_timeline(df, selected_player=None):
         y_coords.extend(y_values)
 
     if selected_player:
-        colors = np.where(df['player_name'] == selected_player, '#f24236', '#e5e7eb')
+
+        # Создаем маску для первых мест (предполагая, что у вас есть колонка 'place' или аналогичная)
+        # Замените 'place' на вашу колонку, которая указывает на место игрока
+        first_place_mask = (df['player_name'] == selected_player) & (df['place_in_series'] == 1)
+        selected_player_mask = df['player_name'] == selected_player
+        colors = np.select(
+            [first_place_mask, selected_player_mask],
+            ['#f99746', '#f24236'],  # Золотой для первых мест, красный для выбранного игрока
+            default='#e5e7eb'  # Серый для остальных
+        )
     else:
         colors = '#f24236'
 
@@ -196,7 +210,6 @@ def create_timeline(df, selected_player=None):
                                 freq='MS')
     # Сдвигаем метки на середину месяца
     month_labels = month_labels + pd.Timedelta(days=14)  # примерно середина месяца
-    print(month_labels)
 
     # Добавляем вертикальные линии для каждого месяца
     for date in month_lines[1:]:
@@ -580,8 +593,8 @@ def create_circular_layout(df, selected_metrics):
         margin={'t': 0, 'r': 10, 'l': 10, 'b': 10},
         showlegend=False,
         plot_bgcolor='white',
-        width=400,
-        height=400,
+        # width=400,
+        # height=400,
         xaxis=dict(
             range=[-2, 2],
             showgrid=False,
