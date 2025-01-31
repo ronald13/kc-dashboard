@@ -208,7 +208,7 @@ app.layout = html.Div([
                             ),
                             dbc.Tooltip(
                                 [
-                                    html.P("График показывает все серии каждого игрока ТОП10", className="mb-2"),
+                                    html.P("График показывает все серии каждого игрока ТОП10", className="mb-2 ", style={'font-weight': 'bold', 'text-align':'left'} ),
                                     html.Div([
                                         html.Div([
                                             html.Div(className="tooltip_rect_color", style={'background':'#f99746'}),
