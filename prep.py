@@ -506,7 +506,7 @@ def get_box_color(box_data, df, metric):
 def create_circular_layout(df, selected_metrics):
     # Рассчитываем координаты для размещения боксов по кругу
     n_boxes = len(df)
-    radius = 1
+    radius = 0.92
     start_angle = -np.pi / 2 - np.pi / 10
     angles = np.linspace(start_angle, start_angle + 2 * np.pi, n_boxes, endpoint=False)
 
@@ -545,7 +545,7 @@ def create_circular_layout(df, selected_metrics):
             y=[y],
             mode='markers+text',
             marker=dict(
-                size=40,
+                size=30,
                 color=box_color,
                 line=dict(color='rgb(25, 25, 25)', width=2)
             ),
@@ -565,7 +565,7 @@ def create_circular_layout(df, selected_metrics):
 
         if annotation_text:
             # Рассчитываем позицию для аннотации (немного дальше от бокса)
-            annotation_radius = radius * 1.3
+            annotation_radius = radius * 1.2
             ann_x = annotation_radius * np.cos(angles[i])
             ann_y = annotation_radius * np.sin(angles[i])
 
@@ -593,8 +593,8 @@ def create_circular_layout(df, selected_metrics):
         margin={'t': 0, 'r': 10, 'l': 10, 'b': 10},
         showlegend=False,
         plot_bgcolor='white',
-        # width=400,
-        # height=400,
+        width=400,
+        height=400,
         xaxis=dict(
             range=[-2, 2],
             showgrid=False,
