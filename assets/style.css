@@ -686,3 +686,35 @@ button{
     accent-color: #cbe5f3;
 }
 
+.tooltip-timeline {
+    /*max-width: 300px !important;*/
+    /*background-color: #ffffff !important;*/
+    border-radius: 6px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    --bs-tooltip-bg: #f3f6f4;
+    --bs-tooltip-color: #1C2321;
+    --bs-tooltip-max-width: 270px;
+    --bs-tooltip-opacity:1;
+    --bs-tooltip-font-size: 0.75rem;
+    --bs-tooltip-padding-x: 1rem;
+    --bs-tooltip-padding-y: 1rem;
+}
+
+.tooltip_row{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start ;
+}
+
+.tooltip_rect_color{
+    width: 12px;
+    height: 12px;
+    margin: 5px;
+    border-radius: 50%;
+
+}
+.only_mobile{
+    display: none;
+}
+
+

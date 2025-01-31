@@ -21,6 +21,9 @@
     .data_links{
         display: none;
     }
+    .only_mobile{
+        display: block;
+    }
 }
 
 @media (max-width: 480px) {

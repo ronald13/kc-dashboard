@@ -189,11 +189,56 @@ app.layout = html.Div([
             html.Div([
                 dbc.Row([
                     dbc.Col([
-                        dcc.Graph(id="tournament-timeline",  config={'displayModeBar': False}, style={'min-width': '1200px'})
-                    ], width=10)
-                ], className="timeline_list", style={ 'margin-bottom':30}),
+                        html.Div([
+                            html.Div(" i ",
+                                id="timeline-info-icon",
+                                style={
+                                    "fontSize": "16px",
+                                    "cursor": "pointer",
+                                    "width": "25px",
+                                    "height": "25px",
+                                    "border-radius": "50%",
+                                    "background": "#fff",
+                                    "border": "2px solid #6b7280",
+                                    "display": "flex",
+                                    "color": "#6b7280",
+                                    "alignItems": "center",
+                                    "justifyContent": "center",
+                                }
+                            ),
+                            dbc.Tooltip(
+                                [
+                                    html.P("График показывает все серии каждого игрока ТОП10", className="mb-2"),
+                                    html.Div([
+                                        html.Div([
+                                            html.Div(className="tooltip_rect_color", style={'background':'#f99746'}),
+                                            html.P('Выиграл серию')
+                                        ], className="tooltip_row"),
 
-            ], style={'overflow-x': 'auto'}),
+                                        html.Div([
+                                            html.Div(className="tooltip_rect_color",  style={'background':'#f24236'}),
+                                            html.P('Остальные серии выбранного игрока')
+                                        ], className="tooltip_row"),
+                                        html.Div([
+                                            html.Div(className="tooltip_rect_color", style={'background': '#e5e7eb'}),
+                                            html.P('Серии других игроков')
+                                        ], className="tooltip_row"),
+
+                                    ], className="mb-0 pl-3")
+                                ],
+                                target="timeline-info-icon",
+                                placement="right",
+                                delay=1000,
+                                className="tooltip-timeline",
+
+                            )
+                        ], style={"display": "flex", "alignItems": "center"}),
+                        dcc.Graph(id="tournament-timeline",  config={'displayModeBar': False}, style={'min-width': '1200px'})
+                    ],style={'display':'flex'}, width=10)
+                ], className="timeline_list"),
+            ], style={'overflow-x': 'auto',  'margin-bottom':'40px'}),
+            html.Div('Скроль вправо', className="only_mobile",
+                     style={'textAlign': 'center', 'font-size': '10px', 'color': '#bfc0c3', 'margin-bottom':'15px', 'margin-top': '-25px'}),
 
 
 
@@ -240,7 +285,7 @@ app.layout = html.Div([
                                         {'label': 'WinRate', 'value': 'win_rate'},
                                         {'label': 'Отстрелы', 'value': 'shots'}
                                     ],
-                                    value=[],
+                                    value=['win_rate'],
                                     inline=True,
                                     style={'color': '#000', 'text-align': 'left'},
                                     className='checklist mb-2',
