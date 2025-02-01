@@ -217,7 +217,7 @@ app.layout = html.Div([
 
                                         html.Div([
                                             html.Div(className="tooltip_rect_color",  style={'background':'#f24236'}),
-                                            html.P('Остальные серии выбранного игрока')
+                                            html.P('Остальные серии выбранного игрока',  style={'text-align':'left'})
                                         ], className="tooltip_row"),
                                         html.Div([
                                             html.Div(className="tooltip_rect_color", style={'background': '#e5e7eb'}),
@@ -465,7 +465,7 @@ def update_players_dashboard(selected_player):
         ], className="app__tile"),
         dbc.Col([
             html.Div('Промахов', className="tile__title"),
-            html.Div(firstshots_miss_value, className="tile__value"),
+            html.Div(firstshots_miss_value, className="tile__value", style={'margin-top': 10}),
         ], className="app__tile"),
     ], style={'gap': 10, 'margin': "0 0 10px 0"}),
 

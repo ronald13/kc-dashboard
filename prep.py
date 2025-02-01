@@ -590,11 +590,11 @@ def create_circular_layout(df, selected_metrics):
 
     # Настраиваем внешний вид
     fig.update_layout(
-        margin={'t': 0, 'r': 10, 'l': 10, 'b': 10},
+        margin={'t': 0, 'r': 0, 'l': 0, 'b': 10},
         showlegend=False,
         plot_bgcolor='white',
-        width=400,
-        height=400,
+        width=350,
+        height=350,
         xaxis=dict(
             range=[-2, 2],
             showgrid=False,

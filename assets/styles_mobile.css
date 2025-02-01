@@ -28,6 +28,10 @@
 
 @media (max-width: 480px) {
     /* Стили для мобильных */
+    .app__wrapper{
+        padding: 10px 3%;
+    }
+
     #player-box img {
         width: 50px !important;
         height: 50px !important;
@@ -43,6 +47,12 @@
     }
     .legend{
         gap: 5px;
+    }
+    .tile__title{
+        font-size: 10px;
+    }
+    .tile__value{
+        font-size: 20px!important;
     }
 }
 
