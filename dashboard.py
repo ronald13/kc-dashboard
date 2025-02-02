@@ -175,7 +175,7 @@ app.layout = html.Div([
                                 "boxShadow": "0 4px 6px rgba(0, 0, 0, 0.1)"
                             }
                         ),
-                        html.Div(player["nickname"], style={"textAlign": "left", "marginTop": "8px", 'fontWeight':500, 'text-transform':'uppercase'}),
+                        html.Div(player["nickname"], style={"textAlign": "left", "marginTop": "8px", 'fontWeight':500, 'text-transform':'uppercase', 'color':'#383737'}),
 
                     ], style={'display':'flex', 'flex-direction':'column', 'align-items':'center', 'justify-center':'center'}, width=1
 
@@ -236,9 +236,9 @@ app.layout = html.Div([
                         dcc.Graph(id="tournament-timeline",  config={'displayModeBar': False}, style={'min-width': '1200px'})
                     ],style={'display':'flex'}, width=10)
                 ], className="timeline_list"),
-            ], style={'overflow-x': 'auto',  'margin-bottom':'40px'}),
-            html.Div('Скроль вправо', className="only_mobile",
-                     style={'textAlign': 'center', 'font-size': '10px', 'color': '#bfc0c3', 'margin-bottom':'15px', 'margin-top': '-25px'}),
+            ], style={'overflow-x': 'auto',  'margin-bottom':'30px'}),
+            # html.Div('Скроль вправо', className="only_mobile",
+            #          style={'textAlign': 'center', 'font-size': '10px', 'color': '#bfc0c3', 'margin-bottom':'15px', 'margin-top': '-25px'}),
 
 
 

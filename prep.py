@@ -307,7 +307,7 @@ def create_cart_distibution(df):
                         'background-color': role.color
                     }
                 ),
-                html.Span(f'{role["role_name"]} {role["count"]}%')
+                html.Span(f'{role["short_name"]} {role["count"]}%')
             ], className='legend-item')
         )
 
