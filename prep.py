@@ -224,7 +224,7 @@ def create_timeline(df, selected_player=None):
 
     # Настройка осей и внешнего вида
     fig_timeline.update_layout(
-        margin={'t': 10, 'b': 10, 'l': 0, 'r': 0},
+        margin={'t': 10, 'b': 10, 'l': 10, 'r': 0},
         xaxis=dict(
             showticklabels=True,
             tickmode='array',
@@ -244,6 +244,15 @@ def create_timeline(df, selected_player=None):
         showlegend=False,
         height=200,
     )
+
+    # fig_timeline.add_annotation(
+    #     x='2024-03-26 00:00:00',
+    #     y=-4,
+    #     text='Скролл вправо',
+    #     showarrow=False,
+    #     bgcolor='#ffffff',
+    #     opacity=0.8
+    # )
 
     return fig_timeline
 
@@ -551,7 +560,7 @@ def create_circular_layout(df, selected_metrics):
             ),
             text=str(box_data['boxNumber'].astype(int)),
             textposition="middle center",
-            textfont=dict(size=14, color='white'),
+            textfont=dict(size=12, color='white'),
             hoverinfo='skip',
             name=f'Box {box_data["boxNumber"].astype(int)}'
         ))
@@ -593,8 +602,8 @@ def create_circular_layout(df, selected_metrics):
         margin={'t': 0, 'r': 0, 'l': 0, 'b': 10},
         showlegend=False,
         plot_bgcolor='white',
-        width=350,
-        height=350,
+        width=340,
+        height=340,
         xaxis=dict(
             range=[-2, 2],
             showgrid=False,

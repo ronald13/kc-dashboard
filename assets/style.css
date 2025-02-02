@@ -207,6 +207,10 @@ button{
 
   }
 
+  .app__label{
+      font-size: 16px;
+  }
+
   label{
     min-width:0;
   }

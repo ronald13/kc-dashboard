@@ -139,7 +139,7 @@ app.layout = html.Div([
 
     html.Div([
             # Header с изображениями игроков
-            html.Div('Кликни на изображение', style={'textAlign': 'center', 'color':'#bfc0c3'}),
+            html.Div('Кликни на изображение', className='app__label', style={'textAlign': 'center', 'color':'#bfc0c3'}),
 
             # Контейнер для списка игроков с горизонтальным скроллом
             html.Div([
@@ -279,7 +279,7 @@ app.layout = html.Div([
                 dbc.Col([
                     html.Div([  # Внешний контейнер
                         html.Div([  # Внутренний контейнер для контента
-                            html.Div(id="player-content", className="text-center my-4 fs-4"),
+                            html.Div(id="player-content", className="text-center my-4 fs-4", style={'display':'none'}),
                             html.Div([
                                 dcc.Checklist(
                                     id='metric-selector',
@@ -323,7 +323,7 @@ app.layout = html.Div([
                                     dcc.Graph(id="shooting_target", config={'displayModeBar': False}),
                                 ], className="text-center w-100", style={'position': 'absolute', 'top': 20, 'right': 0}),
 
-                            ], className="app__tile mb-3", style={'position':'relative'}),
+                            ], className="app__tile mb-3 shooting_target", style={'position':'relative'}),
 
                         ], className="d-flex flex-column h-100")
                     ], className=" h-100"),

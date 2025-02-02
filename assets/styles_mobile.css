@@ -32,6 +32,10 @@
         padding: 10px 3%;
     }
 
+    .app__label{
+       font-size: 13px;
+    }
+
     #player-box img {
         width: 50px !important;
         height: 50px !important;
@@ -49,10 +53,14 @@
         gap: 5px;
     }
     .tile__title{
-        font-size: 10px;
+        font-size: 14px;
     }
     .tile__value{
         font-size: 20px!important;
+    }
+
+    .shooting_target{
+        min-height: 300px;
     }
 }
 
