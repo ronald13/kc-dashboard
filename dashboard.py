@@ -306,7 +306,7 @@ app.layout = html.Div([
                                     className='role-checklist mb-3',
                                 ),
 
-                                dcc.Graph(id='circular-layout', config={'displayModeBar': False}),
+                                dcc.Graph(id='circular-layout', config={'displayModeBar': False, }),
                             ], className="text-center w-100"),
                         ], className="d-flex flex-column h-100")
                     ], className="app__tile h-100"),

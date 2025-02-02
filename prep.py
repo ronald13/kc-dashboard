@@ -225,6 +225,7 @@ def create_timeline(df, selected_player=None):
     # Настройка осей и внешнего вида
     fig_timeline.update_layout(
         margin={'t': 10, 'b': 10, 'l': 10, 'r': 0},
+        dragmode=False,
         xaxis=dict(
             showticklabels=True,
             tickmode='array',
@@ -423,6 +424,7 @@ def create_shooting_target(values):
     # Настраиваем макет
     fig.update_layout(
         margin={'t': 10, 'r': 10, 'l': 10, 'b': 10},
+        dragmode=False,
         xaxis=dict(
             range=[-3.5, 3.5],
             zeroline=False,
@@ -601,6 +603,7 @@ def create_circular_layout(df, selected_metrics):
     fig.update_layout(
         margin={'t': 0, 'r': 0, 'l': 0, 'b': 10},
         showlegend=False,
+        dragmode=False,
         plot_bgcolor='white',
         width=340,
         height=340,
