@@ -245,9 +245,9 @@ app.layout = html.Div([
 
             dbc.Row([
 
-                    dbc.Col([
-                    # Первая колонка с ИГРЫ, ВИНТРЕЙТ и ФАКТЫ
-                        html.Div([
+                dbc.Col([
+                    html.Div([  # Внешний контейнер для первой колонки
+                        html.Div([  # Контейнер для тайлов
                             html.Div([
                                 html.Div('Cыграно игр', className="tile__title"),
                                 html.Div(id="total_games", className="tile__value"),
@@ -272,11 +272,13 @@ app.layout = html.Div([
                                 html.Div(' - Шериф умирал в первую ночь 33 раза из 205', className="tile__title"),
                             ], className="app__tile mb-3"),
 
-                        ], className="h-100"),
-                    ],  xs=12, md=4, className="mb-3"),
+                        ], className="d-flex flex-column h-100")
+                    ], className="h-100"),
+                ], xs=12, md=4, className="mb-3"),
 
-                    dbc.Col([
-                        html.Div([
+                dbc.Col([
+                    html.Div([  # Внешний контейнер
+                        html.Div([  # Внутренний контейнер для контента
                             html.Div(id="player-content", className="text-center my-4 fs-4"),
                             html.Div([
                                 dcc.Checklist(
@@ -305,13 +307,14 @@ app.layout = html.Div([
                                 ),
 
                                 dcc.Graph(id='circular-layout', config={'displayModeBar': False}),
-
                             ], className="text-center w-100"),
-                        ], className="app__tile h-100"),
-                    ], xs=12, md=4, className="mb-3"),
+                        ], className="d-flex flex-column h-100")
+                    ], className="app__tile h-100"),
+                ], xs=12, md=4, className="mb-3"),
 
-                    dbc.Col([
-                        html.Div([
+                dbc.Col([
+                    html.Div([  # Внешний контейнер
+                        html.Div([  # Внутренний контейнер для контента
                             html.Div(id='killed_row'),
                             html.Div([
                                 html.Div('Убит в первую ночь', className="tile__title"),
@@ -319,11 +322,13 @@ app.layout = html.Div([
                                 html.Div([
                                     dcc.Graph(id="shooting_target", config={'displayModeBar': False}),
                                 ], className="text-center w-100", style={'position': 'absolute', 'top': 20, 'right': 0}),
-                            ], className="app__tile", style={'position':'relative', 'height':280}),
-                        ], className="h-100"),
-                    ], xs=12, md=4),
-            #
-                ], className="g-3")
+
+                            ], className="app__tile mb-3", style={'position':'relative'}),
+
+                        ], className="d-flex flex-column h-100")
+                    ], className=" h-100"),
+                ], xs=12, md=4,  className="mb-3"),
+            ], className="g-3 h-100")
 
 
     ], className='app__content'),
@@ -465,7 +470,7 @@ def update_players_dashboard(selected_player):
         ], className="app__tile"),
         dbc.Col([
             html.Div('Промахов', className="tile__title"),
-            html.Div(firstshots_miss_value, className="tile__value", style={'margin-top': 10}),
+            html.Div(firstshots_miss_value, className="tile__value", style={'font-size': 24, 'margin-top': 10}),
         ], className="app__tile"),
     ], style={'gap': 10, 'margin': "0 0 10px 0"}),
 
@@ -476,7 +481,7 @@ def update_players_dashboard(selected_player):
         ], className="app__tile"),
         dbc.Col([
             html.Div('Средний ДБ', className="tile__title"),
-            html.Div(avg_db_value, className="tile__value"),
+            html.Div(avg_db_value, className="tile__value", style={'margin-top': 10}),
         ], className="app__tile"),
     ], style={'gap': 10, 'margin': "0 0 10px 0"})
 
