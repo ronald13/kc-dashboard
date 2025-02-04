@@ -634,3 +634,76 @@ def number_win_series(df):
     # Для каждого 'game_date' находим игрока с максимальным 'total_score'
     max_scores = summed_scores.loc[summed_scores.groupby('game_date')['total_score'].idxmax()]
     return max_scores['player_name'].value_counts().reset_index(name='count')
+
+def generate_quadrant_plot(values, names, colors=['#f24236', '#295883', '#efbf00', '#cbe5f3']):
+    """
+    Создает Plotly-график с квадратами в каждой четверти.
+
+    :param values: Список из 4 значений (проценты 0-100).
+    :param names: Список из 4 названий (Q1-Q4).
+    :param colors: Список из 4 цветов.
+    :return: Объект figure для Dash.
+    """
+    assert len(values) == 4 and len(names) == 4 and len(colors) == 4, "Должно быть ровно 4 значения, имени и цвета."
+
+    # Масштабирование размеров квадратов
+    max_size = 1.0
+    sizes = (np.array(values) / 100) * max_size
+
+    # Определение координат (чтобы один угол был в (0,0))
+    quadrants = [
+        [(0, 0), (-sizes[0], 0), (-sizes[0], sizes[0]), (0, sizes[0])],  # Q2 (Мирный)
+        [(0, 0), (sizes[1], 0), (sizes[1], sizes[1]), (0, sizes[1])],    # Q1 (Мафия)
+        [(0, 0), (-sizes[2], 0), (-sizes[2], -sizes[2]), (0, -sizes[2])], # Q3 (Дон)
+        [(0, 0), (sizes[3], 0), (sizes[3], -sizes[3]), (0, -sizes[3])],   # Q4 (Шериф)
+    ]
+    print(quadrants)
+
+    # Создаем фигуру
+    fig = go.Figure()
+
+    for i in range(4):
+        x_coords, y_coords = zip(*quadrants[i])  # Разделяем X и Y координаты
+
+        # Добавляем квадрат (убираем точки)
+        fig.add_trace(go.Scatter(
+            x=x_coords,
+            y=y_coords,
+            fill="toself",
+            fillcolor=colors[i],
+            line=dict(color="black"),
+            mode="lines",  # Только линии, без точек!
+            hoverinfo="skip",  # Отключаем hover на границах
+            showlegend=False
+        ))
+
+        # Коррекция координат текста (40% от размера квадрата)
+        text_x = x_coords[2] / 2  # 40% внутрь квадрата
+        text_y = y_coords[2]  / 2
+        print(values)
+        print(text_x, text_y)
+        if values[i] >= 30:
+            fig.add_trace(go.Scatter(
+                x=[text_x],
+                y=[text_y],
+                text=[f"{values[i]}%"],  # Только значение!
+                mode="text",
+                textfont=dict(size=9, color="white"),
+                hoverinfo="text",  # Оставляем hover только в центре квадрата
+
+                hovertemplate=names[i]+ ": " + str(values[i])+ "%" + "<extra></extra>",
+                showlegend=False
+            ))
+
+    # Настройки осей и стиля
+    fig.update_layout(
+        margin={'t': 0, 'r': 0, 'l': 0, 'b': 0},
+        dragmode=False,
+        xaxis=dict(zeroline=False,  showticklabels=False,  showgrid=False, range=[-1, 1]),
+        yaxis=dict(zeroline=False, showticklabels=False,   showgrid=False, range=[-1, 1]),
+        showlegend=False,
+        width=160,
+        height=160
+    )
+
+    return fig

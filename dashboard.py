@@ -4,8 +4,9 @@ import dash
 from dash import Dash, dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
 from prep import create_timeline, get_full_data, winrate_chart, create_cart_distibution, get_role, \
-    create_shooting_target, create_circular_layout, create_winrate_distibution, number_win_series
+    create_shooting_target, create_circular_layout, create_winrate_distibution, number_win_series, generate_quadrant_plot
 import json
+import numpy as np
 
 
 
@@ -254,18 +255,9 @@ app.layout = html.Div([
                                 html.Div(id="cart_distibution", className="")
                             ], style={}, className="app__tile mb-3"),
 
-                            html.Div([
-                                dbc.Row([
-                                    dbc.Col([
-                                        html.Div('Винрейт', className="tile__title"),
-                                        html.Div(id="total_winrate", className="tile__value"),
-                                    ], xs=8, className="d-flex flex-column justify-content-center"),
-                                    dbc.Col([
-                                        html.Div(id="winrate_distibution", className="h-100 d-flex align-items-center"),
-                                    ], xs=4, className="ps-0"),
-                                ], className="flex-nowrap"),
-                                html.Div(id="winrate_chart")
-                            ], className="app__tile mb-3"),
+                            html.Div(
+                                id="winrate_blocks",
+                                className="mb-3"),
 
                             html.Div([
                                 html.Div('Дополнительные факты:', className="tile__title"),
@@ -321,6 +313,57 @@ app.layout = html.Div([
                                 html.Div(id="total_firstshot", className="tile__value"),
                                 html.Div([
                                     dcc.Graph(id="shooting_target", config={'displayModeBar': False}),
+                                    html.Div([
+                                        html.Div(" i ",
+                                            id="shooting_target-info-icon",
+                                            style={
+                                                "fontSize": "16px",
+                                                "cursor": "pointer",
+                                                "width": "25px",
+                                                "height": "25px",
+                                                "border-radius": "50%",
+                                                "background": "#fff",
+                                                "border": "2px solid #6b7280",
+                                                "display": "flex",
+                                                "color": "#6b7280",
+                                                "alignItems": "center",
+                                                "justifyContent": "center",
+                                            }
+                                        ),
+                                        dbc.Tooltip(
+                                            [
+                                                html.P("Сколько мафии в ЛХ игрока", className="mb-2 ", style={'font-weight': 'bold', 'text-align':'left'} ),
+                                                html.Div([
+                                                    html.Div([
+                                                        html.Div(className="tooltip_rect_color", style={'background':'#cbe5f3'}),
+                                                        html.P('Тройка черных')
+                                                    ], className="tooltip_row"),
+
+                                                    html.Div([
+                                                        html.Div(className="tooltip_rect_color",  style={'background':'#efbf00'}),
+                                                        html.P('Два черных в ЛХ',  style={'text-align':'left'})
+                                                    ], className="tooltip_row"),
+                                                    html.Div([
+                                                        html.Div(className="tooltip_rect_color", style={'background': '#295883'}),
+                                                        html.P('Один черный в ЛХ')
+                                                    ], className="tooltip_row"),
+                                                    html.Div([
+                                                        html.Div(className="tooltip_rect_color", style={'background': '#f24236'}),
+                                                        html.P('Молоко')
+                                                    ], className="tooltip_row"),
+
+                                                ], className="mb-0 pl-3")
+                                            ],
+                                            target="shooting_target-info-icon",
+                                            placement="right",
+                                            delay=1000,
+                                            className="tooltip-timeline",
+
+                                        )
+                                    ], style={"display": "flex", "alignItems": "center", 'position': 'absolute', 'top':0, 'right':'15px'}),
+
+
+
                                 ], className="text-center w-100", style={'position': 'absolute', 'top': 20, 'right': 0}),
 
                             ], className="app__tile mb-3 shooting_target", style={'position':'relative'}),
@@ -404,10 +447,9 @@ def update_dashboard(*args):
 
 @app.callback(
     Output("total_games", "children"),
-    Output("total_winrate", "children"),
-    Output("winrate_chart", "children"),
+
     Output("cart_distibution", "children"),
-    Output("winrate_distibution", "children"),
+    Output("winrate_blocks", "children"),
 
     Output("total_firstshot", "children"),
     Output("shooting_target", "figure"),
@@ -438,7 +480,7 @@ def update_players_dashboard(selected_player):
     winrate_value = (winrate_df[winrate_df['score'] == 1]['proportion'].values[0] * 100).round(0).astype(int)
 
     fig_winrate = winrate_chart(winrate_value)
-    winrate_by_cart = (selected_df.groupby('role_id')['win_condition'].value_counts(normalize=True) * 100).round(2).reset_index()
+    winrate_by_cart = (selected_df.groupby('role_id')['win_condition'].value_counts(normalize=True) * 100).round(1).reset_index()
     winrate_by_cart=winrate_by_cart.loc[winrate_by_cart['win_condition'] == 1].merge(get_role(), on='role_id', how='left')
 
 
@@ -446,7 +488,15 @@ def update_players_dashboard(selected_player):
     drawn_cards = drawn_cards.merge(get_role(), on='role_id', how='left')
     cart_distibution = create_cart_distibution(drawn_cards)
 
-    winrate_distibution = create_winrate_distibution(winrate_by_cart)
+    # winrate_distibution = create_winrate_distibution(winrate_by_cart)
+    print(winrate_by_cart)
+
+    values = winrate_by_cart['proportion'].to_list()
+    names = winrate_by_cart['role_name'].to_list()
+    # colors = ["#E67E22", "#2980B9", "#E74C3C", "#76D7C4"]
+    winrate_distibution = html.Div(
+        dcc.Graph(figure=generate_quadrant_plot(values, names), config={'displayModeBar': False}, style={})
+    )
 
 
     firstshots_miss_value = df_games.shape[0] / 10 - df_firstshots.dropna(subset=['player_id', 'player_name']).shape[0]
@@ -475,23 +525,32 @@ def update_players_dashboard(selected_player):
     ], style={'gap': 10, 'margin': "0 0 10px 0"}),
 
     killed_row_player = dbc.Row([
-        dbc.Col([
-            html.Div('Выиграно серий', className="tile__title", style={'white-space': 'nowrap'}),
-            html.Div(number_series_win, className="tile__value", style={'margin-top': 10}),
-        ], className="app__tile"),
-        dbc.Col([
-            html.Div('Средний ДБ', className="tile__title"),
-            html.Div(avg_db_value, className="tile__value", style={'margin-top': 10}),
-        ], className="app__tile"),
+                                    dbc.Col([
+                                        html.Div('Выиграно серий', className="tile__title", style={'white-space': 'nowrap'}),
+                                        html.Div(number_series_win, className="tile__value", style={'margin-top': 10}),
+                                    ], className="app__tile"),
+                                    dbc.Col([
+                                        html.Div('Средний ДБ', className="tile__title"),
+                                        html.Div(avg_db_value, className="tile__value", style={'margin-top': 10}),
+                                    ], className="app__tile"),
     ], style={'gap': 10, 'margin': "0 0 10px 0"})
+
+    winrate_blocks = dbc.Row([
+                                    dbc.Col([
+                                        html.Div('Винрейт', className="tile__title"),
+                                        html.Div(f"{winrate_value}%", className="tile__value"),
+                                        fig_winrate
+                                    ], className="app__tile d-flex flex-column justify-content-center"),
+                                    dbc.Col([
+                                        html.Div(winrate_distibution, className="d-flex align-items-center h-100"),
+                                        # Добавлены классы выравнивания и высоты
+                                    ], xs=6, md=4, className="app__tile") if selected_player else dbc.Col([], style={'display': 'none'}),
+    ], className="flex-nowrap", style={'gap': 10, "margin": "0px 0px 10px"})
 
 
     return ( html.Div(selected_df['game_id'].nunique()),
-             html.Div(f"{winrate_value}%"),
-             fig_winrate,
-
              cart_distibution,
-             winrate_distibution if selected_player else html.Div(),
+             winrate_blocks,
              # html.Div(firstshots_miss_value),
              html.Div(df_firstshots[df_firstshots['player_name'] == selected_player].shape[0]),
              fig_target,
