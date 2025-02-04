@@ -657,7 +657,6 @@ def generate_quadrant_plot(values, names, colors=['#f24236', '#295883', '#efbf00
         [(0, 0), (-sizes[2], 0), (-sizes[2], -sizes[2]), (0, -sizes[2])], # Q3 (Дон)
         [(0, 0), (sizes[3], 0), (sizes[3], -sizes[3]), (0, -sizes[3])],   # Q4 (Шериф)
     ]
-    print(quadrants)
 
     # Создаем фигуру
     fig = go.Figure()
@@ -671,18 +670,17 @@ def generate_quadrant_plot(values, names, colors=['#f24236', '#295883', '#efbf00
             y=y_coords,
             fill="toself",
             fillcolor=colors[i],
-            line=dict(color="black"),
-            mode="lines",  # Только линии, без точек!
-            hoverinfo="skip",  # Отключаем hover на границах
+            line=dict(color="#bfc0c3", width=1),
+            mode="lines",
+            hoverinfo="skip",
             showlegend=False
         ))
 
         # Коррекция координат текста (40% от размера квадрата)
         text_x = x_coords[2] / 2  # 40% внутрь квадрата
         text_y = y_coords[2]  / 2
-        print(values)
-        print(text_x, text_y)
-        if values[i] >= 30:
+
+        if values[i] >= 35:
             fig.add_trace(go.Scatter(
                 x=[text_x],
                 y=[text_y],

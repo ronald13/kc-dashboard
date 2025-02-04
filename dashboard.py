@@ -488,12 +488,8 @@ def update_players_dashboard(selected_player):
     drawn_cards = drawn_cards.merge(get_role(), on='role_id', how='left')
     cart_distibution = create_cart_distibution(drawn_cards)
 
-    # winrate_distibution = create_winrate_distibution(winrate_by_cart)
-    print(winrate_by_cart)
-
     values = winrate_by_cart['proportion'].to_list()
     names = winrate_by_cart['role_name'].to_list()
-    # colors = ["#E67E22", "#2980B9", "#E74C3C", "#76D7C4"]
     winrate_distibution = html.Div(
         dcc.Graph(figure=generate_quadrant_plot(values, names), config={'displayModeBar': False}, style={})
     )
@@ -545,7 +541,7 @@ def update_players_dashboard(selected_player):
                                         html.Div(winrate_distibution, className="d-flex align-items-center h-100"),
                                         # Добавлены классы выравнивания и высоты
                                     ], xs=6, md=4, className="app__tile") if selected_player else dbc.Col([], style={'display': 'none'}),
-    ], className="flex-nowrap", style={'gap': 10, "margin": "0px 0px 10px"})
+    ], className="flex-nowrap", style={'gap': 10, "margin": "0px 0px"})
 
 
     return ( html.Div(selected_df['game_id'].nunique()),
