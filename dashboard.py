@@ -266,7 +266,7 @@ app.layout = html.Div([
 
                         ], className="d-flex flex-column h-100")
                     ], className="h-100"),
-                ], xs=12, md=4, className="mb-3 h-100"),
+                ], xs=12, sm=6, lg=4, className="mb-3 h-100"),
 
                 dbc.Col([
                     html.Div([  # Внешний контейнер
@@ -300,9 +300,9 @@ app.layout = html.Div([
 
                                 dcc.Graph(id='circular-layout', config={'displayModeBar': False, }),
                             ], className="text-center w-100"),
-                        ], className="d-flex flex-column h-100")
-                    ], className="app__tile h-100"),
-                ], xs=12, md=4, className="mb-3"),
+                        ], className="d-flex flex-column h-100"),
+                    ], className="app__tile h-100 circular-tile" , style={}),
+                ],  xs=12, sm=6, lg=4, className="mb-3 h-100"),
 
                 dbc.Col([
                     html.Div([  # Внешний контейнер
@@ -370,7 +370,7 @@ app.layout = html.Div([
 
                         ], className="d-flex flex-column h-100")
                     ], className=" h-100"),
-                ], xs=12, md=4,  className="mb-3"),
+                ],  xs=12, sm=12, lg=4,  className="mb-3 h-100 order-sm-3 order-lg-2"),
             ], className="g-3 h-100")
 
 
@@ -497,7 +497,8 @@ def update_players_dashboard(selected_player):
     # Считаем винрейт (если total_games = 0, винрейт тоже 0)
     role_stats['winrate'] = ((role_stats['win_games'] / role_stats['total_games'].fillna(0)) * 100).round(1)
     role_stats = role_stats.merge(get_role(), on='role_id', how='left')
-    print(role_stats)
+
+
 
     drawn_cards = (selected_df['role_id'].value_counts(normalize=True) * 100).round(0).astype(int).reset_index().rename(columns={'proportion': 'count'})
     drawn_cards = drawn_cards.merge(get_role(), on='role_id', how='left')
@@ -505,9 +506,8 @@ def update_players_dashboard(selected_player):
 
     values = role_stats['winrate'].to_list()
     names = role_stats['role_name'].to_list()
-    winrate_distibution = html.Div(
-        dcc.Graph(figure=generate_quadrant_plot(role_stats), config={'displayModeBar': False}, style={})
-    )
+    winrate_distibution = dcc.Graph(figure=generate_quadrant_plot(role_stats), config={'displayModeBar': False}, style={'width':160, 'height':160})
+
 
 
     firstshots_miss_value = df_games.shape[0] / 10 - df_firstshots.dropna(subset=['player_id', 'player_name']).shape[0]
@@ -541,7 +541,7 @@ def update_players_dashboard(selected_player):
                                         html.Div(number_series_win, className="tile__value", style={'margin-top': 10}),
                                     ], className="app__tile"),
                                     dbc.Col([
-                                        html.Div('Средний ДБ', className="tile__title"),
+                                        html.Div('Средний ДБ', className="tile__title", style={'white-space': 'nowrap'}),
                                         html.Div(avg_db_value, className="tile__value", style={'margin-top': 10}),
                                     ], className="app__tile"),
     ], style={'gap': 10, 'margin': "0 0 10px 0"})
@@ -552,16 +552,18 @@ def update_players_dashboard(selected_player):
                         html.Div(f"{winrate_value}%", className="tile__value"),
                         fig_winrate
                     ],
-                        xs=12 if not selected_player else 6,  # мобильные устройства
-                        md=12 if not selected_player else 8,  # десктопные устройства
-                        className="app__tile d-flex flex-column justify-content-center pe-2"),
+
+                        className="app__tile d-flex flex-column justify-content-center",
+                        style={"flex-basis": 'calc(100% - 210px)', 'min-width': '200px'}
+                    ),
 
                     dbc.Col([
-                        html.Div(winrate_distibution, className="d-flex align-items-center h-100"),
-                    ],   xs=6,   # мобильные устройства
-                         md=4,   # десктопные устройства
-                        className="app__tile ps-2") if selected_player else None,
-                ], className="g-0 h-100", style={"margin": 0})
+                        winrate_distibution
+                    ],
+                        style={'min-width': '200px', 'align-items': 'center'},
+                        className="app__tile quadrant_tile") if selected_player else None,
+
+                ], className="h-100", style={"margin": 0, 'gap':'10px'})
 
 
     return ( html.Div(selected_df['game_id'].nunique()),

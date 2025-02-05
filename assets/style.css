@@ -756,4 +756,14 @@ button{
     }
 }
 
+.shooting_target{
+    min-height: 300px;
+}
+.circular-tile{
+    min-width: 375px;
+}
+.quadrant_tile{
+   min-width: 180px;
+}
+
 

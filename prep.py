@@ -709,8 +709,8 @@ def generate_quadrant_plot(df, colors=['#f24236', '#295883', '#efbf00', '#cbe5f3
         yaxis=dict(zeroline=False, showticklabels=False,   showgrid=False, range=[-1, 1],  fixedrange=True),
         showlegend=False,
 
-        width=160,
-        height=160
+        # width=160,
+        # height=160
     )
 
     return fig

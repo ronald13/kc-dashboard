@@ -62,6 +62,9 @@
     .shooting_target{
         min-height: 300px;
     }
+    .circular-tile{
+        min-width: auto;
+    }
 
     .footer{
         align-items: center!important;
