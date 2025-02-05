@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 import numpy as np
 from dash import html
 from collections import Counter
+import math
 
 
 MAFIA_COLOR = '#295883'
@@ -354,6 +355,7 @@ def create_winrate_distibution(df):
 
 def create_shooting_target(values):
 
+    values = [x for x in values if not math.isnan(x)]
     counts = Counter(values)
 
     # Создаем случайные координаты для точек на круге
@@ -417,7 +419,7 @@ def create_shooting_target(values):
             cmin=0,  # Устанавливаем минимальное значение цветовой шкалы
             cmax=3  # Устанавливаем максимальное значение цветовой шкалы
         ),
-        text=[f'{val} черных в ЛХ<br>Всего: {counts[val]}' for val in values],
+        text = [f'{int(val)} {"черный" if int(val) == 1 else "черных"} в ЛХ<br>Всего: {counts[val]}' for val in values],
         hoverinfo='text'
     ))
 
@@ -635,7 +637,7 @@ def number_win_series(df):
     max_scores = summed_scores.loc[summed_scores.groupby('game_date')['total_score'].idxmax()]
     return max_scores['player_name'].value_counts().reset_index(name='count')
 
-def generate_quadrant_plot(values, names, colors=['#f24236', '#295883', '#efbf00', '#cbe5f3']):
+def generate_quadrant_plot(df, colors=['#f24236', '#295883', '#efbf00', '#cbe5f3']):
     """
     Создает Plotly-график с квадратами в каждой четверти.
 
@@ -644,11 +646,11 @@ def generate_quadrant_plot(values, names, colors=['#f24236', '#295883', '#efbf00
     :param colors: Список из 4 цветов.
     :return: Объект figure для Dash.
     """
-    assert len(values) == 4 and len(names) == 4 and len(colors) == 4, "Должно быть ровно 4 значения, имени и цвета."
+    assert len(df['winrate']) == 4 and len(df['role_name']) == 4 and len(df['color']) == 4, "Должно быть ровно 4 значения, имени и цвета."
 
     # Масштабирование размеров квадратов
     max_size = 1.0
-    sizes = (np.array(values) / 100) * max_size
+    sizes = (np.array(df['winrate']) / 100) * max_size
 
     # Определение координат (чтобы один угол был в (0,0))
     quadrants = [
@@ -658,7 +660,6 @@ def generate_quadrant_plot(values, names, colors=['#f24236', '#295883', '#efbf00
         [(0, 0), (sizes[3], 0), (sizes[3], -sizes[3]), (0, -sizes[3])],   # Q4 (Шериф)
     ]
 
-    # Создаем фигуру
     fig = go.Figure()
 
     for i in range(4):
@@ -672,7 +673,13 @@ def generate_quadrant_plot(values, names, colors=['#f24236', '#295883', '#efbf00
             fillcolor=colors[i],
             line=dict(color="#bfc0c3", width=1),
             mode="lines",
-            hoverinfo="skip",
+            # hoverinfo="skip",
+            name=f"<b>{df['role_name'][i]}</b> <br>"
+                 f"{df['win_games'][i]} из {df['total_games'][i]}",
+            # hovertemplate="<b>" + df['role_name'][i] + "</b><br>"
+            #                                            "Выиграно " + str(df['win_games'][i]) + " из " + str(
+            #     df['total_games'][i]) + " (" + str(df['winrate'][i]) + "%)" +
+            #               "<extra></extra>",  # Убираем trace label
             showlegend=False
         ))
 
@@ -680,16 +687,17 @@ def generate_quadrant_plot(values, names, colors=['#f24236', '#295883', '#efbf00
         text_x = x_coords[2] / 2  # 40% внутрь квадрата
         text_y = y_coords[2]  / 2
 
-        if values[i] >= 35:
+        if df['winrate'][i] >= 35:
             fig.add_trace(go.Scatter(
                 x=[text_x],
                 y=[text_y],
-                text=[f"{values[i]}%"],  # Только значение!
+                text=[f"{df['winrate'][i]}%"],  # Только значение!
                 mode="text",
                 textfont=dict(size=9, color="white"),
-                hoverinfo="text",  # Оставляем hover только в центре квадрата
+                # hoverinfo="text",  # Оставляем hover только в центре квадрата
+                hoverinfo="skip",
 
-                hovertemplate=names[i]+ ": " + str(values[i])+ "%" + "<extra></extra>",
+
                 showlegend=False
             ))
 
@@ -697,9 +705,10 @@ def generate_quadrant_plot(values, names, colors=['#f24236', '#295883', '#efbf00
     fig.update_layout(
         margin={'t': 0, 'r': 0, 'l': 0, 'b': 0},
         dragmode=False,
-        xaxis=dict(zeroline=False,  showticklabels=False,  showgrid=False, range=[-1, 1]),
-        yaxis=dict(zeroline=False, showticklabels=False,   showgrid=False, range=[-1, 1]),
+        xaxis=dict(zeroline=False,  showticklabels=False,  showgrid=False, range=[-1, 1],  fixedrange=True),
+        yaxis=dict(zeroline=False, showticklabels=False,   showgrid=False, range=[-1, 1],  fixedrange=True),
         showlegend=False,
+
         width=160,
         height=160
     )
