@@ -18,11 +18,14 @@
     }
 
     .footer p,
-    .data_links{
-        display: none;
+    .data_{
+        display: none!important;
     }
     .only_mobile{
         display: block;
+    }
+    .footer{
+        align-items: flex-start!important;
     }
 }
 
@@ -66,9 +69,7 @@
         min-width: auto;
     }
 
-    .footer{
-        align-items: center!important;
-    }
+
 }
 
 /* Стили для скролла */

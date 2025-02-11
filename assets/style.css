@@ -5,6 +5,7 @@ body{
      /*background-color: #282e38;*/
      font-family: 'Roboto' ,sans-serif;
      color: #000;
+     /*background: url("/assets/fom.png");*/
 
 }
 
@@ -367,6 +368,7 @@ button{
     font-size: 12px;
     margin-right: 10px;
     text-decoration: none;
+    color: #f24236;
 
 }
 
@@ -518,6 +520,16 @@ button{
     width: 100%;
     border-top:1px solid #dedede;
     margin-top: 10px;
+    font-size: 15px;
+}
+
+.app__footer .data_links{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.app__footer .data_links p{
+    white-space: nowrap;
 }
 
 

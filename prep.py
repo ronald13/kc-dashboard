@@ -572,9 +572,9 @@ def create_circular_layout(df, selected_metrics):
         # Добавляем аннотации для метрик
         annotation_text = []
         if 'win_rate' in selected_metrics:
-            annotation_text.append(f"WR: <b>{box_data['win_rate']}%</b>")
+            annotation_text.append(f"<b>{box_data['win_rate']}%</b>")
         if 'shots' in selected_metrics:
-            annotation_text.append(f"Отстрелы: <b>{box_data['shots'].astype(int)}</b>")
+            annotation_text.append(f"Убит: <b>{box_data['shots'].astype(int)}</b>")
 
         if annotation_text:
             # Рассчитываем позицию для аннотации (немного дальше от бокса)
@@ -673,13 +673,9 @@ def generate_quadrant_plot(df, colors=['#f24236', '#295883', '#efbf00', '#cbe5f3
             fillcolor=colors[i],
             line=dict(color="#bfc0c3", width=1),
             mode="lines",
-            # hoverinfo="skip",
-            name=f"<b>{df['role_name'][i]}</b> <br>"
-                 f"{df['win_games'][i]} из {df['total_games'][i]}",
-            # hovertemplate="<b>" + df['role_name'][i] + "</b><br>"
-            #                                            "Выиграно " + str(df['win_games'][i]) + " из " + str(
-            #     df['total_games'][i]) + " (" + str(df['winrate'][i]) + "%)" +
-            #               "<extra></extra>",  # Убираем trace label
+            hoverinfo="text",
+            text=f"<b>{df['role_name'][i]}</b><br>{df['win_games'][i]} из {df['total_games'][i]}<br><b>ДБ:</b> {df['dops'][i]}",
+            name=df['role_name'][i],
             showlegend=False
         ))
 

@@ -21,27 +21,27 @@ color_schemes = ['rgb(243,243,243)', 'rgb(206,217,216)', 'rgb(152,171,184)', 'rg
 nickname_mapping = {
     "Колобок": "kolobok",
     "Зверюга": "zweruga",
-    "GOJO": "Gojo",
-    "Ирландец": "Irlandman",
-    "Блудница": "Bludnica",
-    "KED": "Ked",
-    "Бывшая": "Byvshaja",
-    "Дантист": "Dantist",
-    "Плесень": "Plesen",
+    "GOJO": "gojo",
+    "Ирландец": "irlandman",
+    "Блудница": "bludnica",
+    "KED": "ked",
+    "Бывшая": "byvshaja",
+    "Дантист": "dantist",
+    "Плесень": "plesen",
     "Лупа": "lupa",
-    "Ад": "Ad"
+
 }
 # Список игроков
 # players = [
 #     {"name": "Колобок", "nickname": "Колобок", "image": "assets/foto/kolobok.jpg"},
 #     {"name": "Зверюга", "nickname": "Зверюга", "image": "/assets/foto/zweruga.jpg"},
-#     {"name": "GOJO", "nickname": "GOJO", "image": "assets/foto/Gojo.jpg"},
-#     {"name": "Ирландец", "nickname": "Ирландец", "image": "assets/foto/Irlandman.jpg"},
-#     {"name": "Блудница", "nickname": "Блудница", "image": "assets/foto/Bludnica.jpg"},
-#     {"name": "KED", "nickname": "KED", "image": "assets/foto/Ked.jpg"},
-#     {"name": "Бывшая", "nickname": "Бывшая", "image": "assets/foto/Byvshaja.jpg"},
-#     {"name": "Дантист", "nickname": "Дантист", "image": "assets/foto/Dantist.jpg"},
-#     {"name": "Плесень", "nickname": "Плесень", "image": "assets/foto/Plesen.jpg"},
+#     {"name": "GOJO", "nickname": "GOJO", "image": "assets/foto/gojo.jpg"},
+#     {"name": "Ирландец", "nickname": "Ирландец", "image": "assets/foto/irlandman.jpg"},
+#     {"name": "Блудница", "nickname": "Блудница", "image": "assets/foto/bludnica.jpg"},
+#     {"name": "KED", "nickname": "KED", "image": "assets/foto/ked.jpg"},
+#     {"name": "Бывшая", "nickname": "Бывшая", "image": "assets/foto/byvshaja.jpg"},
+#     {"name": "Дантист", "nickname": "Дантист", "image": "assets/foto/dantist.jpg"},
+#     {"name": "Плесень", "nickname": "Плесень", "image": "assets/foto/plesen.jpg"},
 #     {"name": "Лупа", "nickname": "Лупа", "image": "assets/foto/lupa.jpg"},
 # ]
 
@@ -58,6 +58,7 @@ points = df_games[['game_id', 'game_date', 'player_name']]
 points.drop_duplicates(subset=['game_date', 'player_name'], inplace=True)
 
 top10_players = df_games.groupby('player_name')['total_score'].sum().reset_index().sort_values('total_score', ascending=False).head(10)['player_name'].to_list()
+top10_players = ['Колобок', 'KED', 'Зверюга',  'Бывшая', 'Плесень', 'GOJO',  'Лупа', 'Дантист', 'Ирландец', 'Блудница']
 top_players = df_games[df_games['player_name'].isin(top10_players)]
 top_players = top_players.groupby(['game_date', 'player_name']).agg(total_score=('total_score', 'sum'),
                                                                         game_count=(
@@ -77,7 +78,7 @@ top_players = top_players.merge(df1[['game_date', 'series_id', 'player_name', 'p
 
 # generate players list with top10
 players = [
-    {"name": nick, "nickname": nick, "image": f"assets/foto/{nickname_mapping[nick]}.jpg"}
+    {"name": nick, "nickname": nick, "image": f"assets/foto/{nickname_mapping[nick]}_rem.jpg"}
     for i, nick in enumerate(top10_players)
 ]
 
@@ -98,8 +99,8 @@ default_style = {
         "display": "flex",
         "justifyContent": "center",
         "alignItems": "center",
-        "width": "100px",
-        "height": "100px",
+        "width": "90px",
+        "height": "90px",
         "borderRadius": "50%",
         "overflow": "hidden",
         "backgroundColor": "#f8f9fa",
@@ -125,292 +126,316 @@ server = app.server
 
 app.layout = html.Div([
 
-
-    # HEADER INFO
-    html.Div([
-        html.H1('Капитанский стол 3.0', style={'line-height': '1.1', 'letter-spacing': '-0.81px', 'color': '#f24236',
-                                              'font-family': 'Roboto', 'text-transform': 'uppercase'}),
-
-        html.P('#кc2024 #брест #сезон3 #топ10',
-               style={'width': '350px', 'font-size': '14px',
-                      'margin-top':'-5px', 'font-weight':'bold', 'color':'#757575'},
-               className='header__text'),
-    ],  className='app__header'),
-
-
-    html.Div([
-            # Header с изображениями игроков
-            html.Div('Кликни на изображение', className='app__label', style={'textAlign': 'center', 'color':'#bfc0c3'}),
-
-            # Контейнер для списка игроков с горизонтальным скроллом
-            html.Div([
-                dbc.Row(
-                    [
-                    dbc.Col([
+                        # HEADER INFO
                         html.Div([
-                            html.Img(
-                                src=player["image"],
-                                id=f"player-{i}",
-                                style={
-                                    "cursor": "pointer",
-                                    "border": "2px solid transparent",
-                                    "borderRadius": "50%",
-                                    "width": "80px",
-                                    "height": "80px",
-                                    "objectFit": "cover"
-                                }
-                            ),
+                            html.H1('Капитанский стол 3.0',
+                                    style={'line-height': '1.1', 'letter-spacing': '-0.81px', 'color': '#f24236',
+                                           'font-family': 'Roboto', 'text-transform': 'uppercase'}),
 
-                        ],
-                            id=f"player-box-{i}",
-                            style={
-                                "display": "flex",
-                                "justifyContent": "center",
-                                "alignItems": "center",
-                                "flexDirection": "column",
-                                "width": "100px",
-                                "height": "120px",
-                                "borderRadius": "50%",
-                                "overflow": "hidden",
-                                "backgroundColor": "#f8f9fa",
-                                "boxShadow": "0 4px 6px rgba(0, 0, 0, 0.1)"
-                            }
-                        ),
-                        html.Div(player["nickname"], style={"textAlign": "left", "marginTop": "8px", 'fontWeight':500, 'text-transform':'uppercase', 'color':'#383737'}),
+                            html.P('#кc2024 #брест #сезон3 #топ10',
+                                   style={'width': '350px', 'font-size': '14px',
+                                          'margin-top': '-5px', 'font-weight': 'bold', 'color': '#757575'},
+                                   className='header__text'),
+                        ], className='app__header'),
 
-                    ], style={'display':'flex', 'flex-direction':'column', 'align-items':'center', 'justify-center':'center'}, width=1
-
-                    ) for i, player in enumerate(players)
-                ],
-                    className="players_list", style={'flex-wrap': 'nowrap', 'min-width': '1200px', 'padding': '0 15px'}
-                ),
-            ], style={'overflow-x': 'auto', 'margin': '0 10px'}),
-
-
-            html.Div([
-                dbc.Row([
-                    dbc.Col([
                         html.Div([
-                            html.Div(" i ",
-                                id="timeline-info-icon",
-                                style={
-                                    "fontSize": "16px",
-                                    "cursor": "pointer",
-                                    "width": "25px",
-                                    "height": "25px",
-                                    "border-radius": "50%",
-                                    "background": "#fff",
-                                    "border": "2px solid #6b7280",
-                                    "display": "flex",
-                                    "color": "#6b7280",
-                                    "alignItems": "center",
-                                    "justifyContent": "center",
-                                }
-                            ),
-                            dbc.Tooltip(
-                                [
-                                    html.P("График показывает все серии каждого игрока ТОП10", className="mb-2 ", style={'font-weight': 'bold', 'text-align':'left'} ),
-                                    html.Div([
-                                        html.Div([
-                                            html.Div(className="tooltip_rect_color", style={'background':'#f99746'}),
-                                            html.P('Выиграл серию')
-                                        ], className="tooltip_row"),
+                            # Header с изображениями игроков
+                            html.Div('Кликни на изображение', className='app__label',
+                                     style={'textAlign': 'center', 'color': '#bfc0c3'}),
 
-                                        html.Div([
-                                            html.Div(className="tooltip_rect_color",  style={'background':'#f24236'}),
-                                            html.P('Остальные серии выбранного игрока',  style={'text-align':'left'})
-                                        ], className="tooltip_row"),
-                                        html.Div([
-                                            html.Div(className="tooltip_rect_color", style={'background': '#e5e7eb'}),
-                                            html.P('Серии других игроков')
-                                        ], className="tooltip_row"),
-
-                                    ], className="mb-0 pl-3")
-                                ],
-                                target="timeline-info-icon",
-                                placement="right",
-                                delay=1000,
-                                className="tooltip-timeline",
-
-                            )
-                        ], style={"display": "flex", "alignItems": "center"}),
-                        dcc.Graph(id="tournament-timeline",  config={'displayModeBar': False}, style={'min-width': '1200px'})
-                    ],style={'display':'flex'}, width=10)
-                ], className="timeline_list"),
-            ], style={'overflow-x': 'auto',  'margin-bottom':'30px'}),
-            # html.Div('Скроль вправо', className="only_mobile",
-            #          style={'textAlign': 'center', 'font-size': '10px', 'color': '#bfc0c3', 'margin-bottom':'15px', 'margin-top': '-25px'}),
-
-
-
-
-            dbc.Row([
-
-                dbc.Col([
-                    html.Div([  # Внешний контейнер для первой колонки
-                        html.Div([  # Контейнер для тайлов
+                            # Контейнер для списка игроков с горизонтальным скроллом
                             html.Div([
-                                html.Div('Cыграно игр', className="tile__title"),
-                                html.Div(id="total_games", className="tile__value"),
-                                html.Div(id="cart_distibution", className="")
-                            ], style={}, className="app__tile mb-3"),
+                                dbc.Row(
+                                    [
+                                        dbc.Col([
+                                            html.Div([
+                                                html.Img(
+                                                    src=player["image"],
+                                                    id=f"player-{i}",
+                                                    style={
+                                                        "cursor": "pointer",
+                                                        "border": "2px solid transparent",
+                                                        "borderRadius": "50%",
+                                                        "width": "80px",
+                                                        "height": "80px",
+                                                        "objectFit": "cover"
+                                                    }
+                                                ),
 
-                            html.Div(
-                                id="winrate_blocks",
-                                className="mb-3"),
-
-                            html.Div([
-                                html.Div('Дополнительные факты:', className="tile__title"),
-                                html.Div(' - Шериф умирал в первую ночь 33 раза из 205', className="tile__title"),
-                            ], className="app__tile mb-3"),
-
-                        ], className="d-flex flex-column h-100")
-                    ], className="h-100"),
-                ], xs=12, sm=6, lg=4, className="mb-3 h-100"),
-
-                dbc.Col([
-                    html.Div([  # Внешний контейнер
-                        html.Div([  # Внутренний контейнер для контента
-                            html.Div(id="player-content", className="text-center my-4 fs-4", style={'display':'none'}),
-                            html.Div([
-                                dcc.Checklist(
-                                    id='metric-selector',
-                                    options=[
-                                        {'label': 'WinRate', 'value': 'win_rate'},
-                                        {'label': 'Отстрелы', 'value': 'shots'}
-                                    ],
-                                    value=['win_rate'],
-                                    inline=True,
-                                    style={'color': '#000', 'text-align': 'left'},
-                                    className='checklist mb-2',
-                                ),
-                                dcc.Checklist(
-                                    id='role-selector',
-                                    options=[
-                                        {'label': 'Мирный', 'value': 1},
-                                        {'label': 'Мафия', 'value': 2},
-                                        {'label': 'Шериф', 'value': 4},
-                                        {'label': 'Дон', 'value': 3}
-                                    ],
-                                    value=[],
-                                    inline=True,
-                                    style={'color': '#000', 'text-align': 'left'},
-                                    className='role-checklist mb-3',
-                                ),
-
-                                dcc.Graph(id='circular-layout', config={'displayModeBar': False, }),
-                            ], className="text-center w-100"),
-                        ], className="d-flex flex-column h-100"),
-                    ], className="app__tile h-100 circular-tile" , style={}),
-                ],  xs=12, sm=6, lg=4, className="mb-3 h-100"),
-
-                dbc.Col([
-                    html.Div([  # Внешний контейнер
-                        html.Div([  # Внутренний контейнер для контента
-                            html.Div(id='killed_row'),
-                            html.Div([
-                                html.Div('Убит в первую ночь', className="tile__title"),
-                                html.Div(id="total_firstshot", className="tile__value"),
-                                html.Div([
-                                    dcc.Graph(id="shooting_target", config={'displayModeBar': False}),
-                                    html.Div([
-                                        html.Div(" i ",
-                                            id="shooting_target-info-icon",
-                                            style={
-                                                "fontSize": "16px",
-                                                "cursor": "pointer",
-                                                "width": "25px",
-                                                "height": "25px",
-                                                "border-radius": "50%",
-                                                "background": "#fff",
-                                                "border": "2px solid #6b7280",
-                                                "display": "flex",
-                                                "color": "#6b7280",
-                                                "alignItems": "center",
-                                                "justifyContent": "center",
-                                            }
-                                        ),
-                                        dbc.Tooltip(
-                                            [
-                                                html.P("Сколько мафии в ЛХ игрока", className="mb-2 ", style={'font-weight': 'bold', 'text-align':'left'} ),
-                                                html.Div([
-                                                    html.Div([
-                                                        html.Div(className="tooltip_rect_color", style={'background':'#cbe5f3'}),
-                                                        html.P('Тройка черных')
-                                                    ], className="tooltip_row"),
-
-                                                    html.Div([
-                                                        html.Div(className="tooltip_rect_color",  style={'background':'#efbf00'}),
-                                                        html.P('Два черных в ЛХ',  style={'text-align':'left'})
-                                                    ], className="tooltip_row"),
-                                                    html.Div([
-                                                        html.Div(className="tooltip_rect_color", style={'background': '#295883'}),
-                                                        html.P('Один черный в ЛХ')
-                                                    ], className="tooltip_row"),
-                                                    html.Div([
-                                                        html.Div(className="tooltip_rect_color", style={'background': '#f24236'}),
-                                                        html.P('Молоко')
-                                                    ], className="tooltip_row"),
-
-                                                ], className="mb-0 pl-3")
                                             ],
-                                            target="shooting_target-info-icon",
-                                            placement="right",
-                                            delay=1000,
-                                            className="tooltip-timeline",
+                                                id=f"player-box-{i}",
+                                                # style={
+                                                #     "display": "flex",
+                                                #     "justifyContent": "center",
+                                                #     "alignItems": "center",
+                                                #     "flexDirection": "column",
+                                                #     "width": "100px",
+                                                #     "height": "120px",
+                                                #     "borderRadius": "50%",
+                                                #     "overflow": "hidden",
+                                                #     "backgroundColor": "#f8f9fa",
+                                                #     "boxShadow": "0 4px 6px rgba(0, 0, 0, 0.1)"
+                                                # }
+                                            ),
+                                            html.Div(player["nickname"],
+                                                     style={"textAlign": "left", "marginTop": "8px",
+                                                            'fontWeight': 500, 'text-transform': 'uppercase',
+                                                            'color': '#383737'}),
 
-                                        )
-                                    ], style={"display": "flex", "alignItems": "center", 'position': 'absolute', 'top':0, 'right':'15px'}),
+                                        ], style={'display': 'flex', 'flex-direction': 'column',
+                                                  'align-items': 'center', 'justify-center': 'center'}, width=1
 
+                                        ) for i, player in enumerate(players)
+                                    ],
+                                    className="players_list",
+                                    style={'flex-wrap': 'nowrap', 'min-width': '1200px', 'padding': '0 15px'}
+                                ),
+                            ], style={'overflow-x': 'auto', 'margin': '0 10px'}),
 
+                            html.Div([
+                                dbc.Row([
+                                    dbc.Col([
+                                        html.Div([
+                                            html.Div(" i ",
+                                                     id="timeline-info-icon",
+                                                     style={
+                                                         "fontSize": "16px",
+                                                         "cursor": "pointer",
+                                                         "width": "25px",
+                                                         "height": "25px",
+                                                         "border-radius": "50%",
+                                                         "background": "#fff",
+                                                         "border": "2px solid #6b7280",
+                                                         "display": "flex",
+                                                         "color": "#6b7280",
+                                                         "alignItems": "center",
+                                                         "justifyContent": "center",
+                                                     }
+                                                     ),
+                                            dbc.Tooltip(
+                                                [
+                                                    html.P("График показывает все серии каждого игрока ТОП10",
+                                                           className="mb-2 ",
+                                                           style={'font-weight': 'bold', 'text-align': 'left'}),
+                                                    html.Div([
+                                                        html.Div([
+                                                            html.Div(className="tooltip_rect_color",
+                                                                     style={'background': '#f99746'}),
+                                                            html.P('Выиграл серию')
+                                                        ], className="tooltip_row"),
 
-                                ], className="text-center w-100", style={'position': 'absolute', 'top': 20, 'right': 0}),
+                                                        html.Div([
+                                                            html.Div(className="tooltip_rect_color",
+                                                                     style={'background': '#f24236'}),
+                                                            html.P('Остальные серии выбранного игрока',
+                                                                   style={'text-align': 'left'})
+                                                        ], className="tooltip_row"),
+                                                        html.Div([
+                                                            html.Div(className="tooltip_rect_color",
+                                                                     style={'background': '#e5e7eb'}),
+                                                            html.P('Серии других игроков')
+                                                        ], className="tooltip_row"),
 
-                            ], className="app__tile mb-3 shooting_target", style={'position':'relative'}),
+                                                    ], className="mb-0 pl-3")
+                                                ],
+                                                target="timeline-info-icon",
+                                                placement="right",
+                                                delay=1000,
+                                                className="tooltip-timeline",
 
-                        ], className="d-flex flex-column h-100")
-                    ], className=" h-100"),
-                ],  xs=12, sm=12, lg=4,  className="mb-3 h-100 order-sm-3 order-lg-2"),
-            ], className="g-3 h-100")
+                                            )
+                                        ], style={"display": "flex", "alignItems": "center"}),
+                                        dcc.Graph(id="tournament-timeline", config={'displayModeBar': False},
+                                                  style={'min-width': '1200px'})
+                                    ], style={'display': 'flex'}, width=10)
+                                ], className="timeline_list"),
+                            ], style={'overflow-x': 'auto', 'margin-bottom': '30px'}),
 
+                            dbc.Row([
 
-    ], className='app__content'),
+                                dbc.Col([
+                                    html.Div([  # Внешний контейнер для первой колонки
+                                        html.Div([  # Контейнер для тайлов
+                                            html.Div([
+                                                html.Div('Cыграно игр', className="tile__title"),
+                                                html.Div(id="total_games", className="tile__value"),
+                                                html.Div(id="cart_distibution", className="")
+                                            ], style={}, className="app__tile mb-3"),
 
-    # FOOTER INFO
-    html.Div([
-        html.Div([
-                html.Div([
-                    html.Img(src='assets/img/logo.png', style={'width': '80px'}),
-                    html.P('2024 ШIFFER Inc©. Информация носит ознакомительный характер.', style={'font-size':'15px', 'margin':'0 10px'}),
-                ], style={'margin-top': '10px', 'display': 'flex', 'flex-direction': 'row', 'align-items': 'flex-start', 'font-size': '15px' }, className='footer'),
-                html.Div([
-                    html.P('Data Source:'),
-                    html.A("ShifferData", href='https://app.shiffer.info/#/turnirlist?type=15', target="_blank",
-                           className='link')
-                ], className='data_links',  style={'text-align': 'center'}),
+                                            html.Div(
+                                                id="winrate_blocks",
+                                                className="mb-3"),
 
-                html.Div([
-                    html.P('Created by: '),
-                    html.P('Luterino', style={'fontWeight': 'bold'}),
+                                            html.Div([
+                                                html.Div('Дополнительные факты:', className="tile__title"),
+                                                html.Div(' - Шериф умирал в первую ночь 33 раза из 205',
+                                                         className="tile__title"),
+                                            ], className="app__tile mb-3"),
 
-                ], className='data_links', style={'text-align': 'center'} )
-            ], className='vrectangle')
-    ], className='app__footer'),
+                                        ], className="d-flex flex-column h-100")
+                                    ], className="h-100"),
+                                ], xs=12, sm=6, lg=4, className="mb-3"),
+                                dbc.Col([
+                                    html.Div([  # Внешний контейнер
+                                        html.Div([  # Внутренний контейнер для контента
+                                            html.Div(id="player-content", className="text-center my-4 fs-4",
+                                                     style={'display': 'none'}),
+                                            html.Div([
+                                                dcc.Checklist(
+                                                    id='metric-selector',
+                                                    options=[
+                                                        {'label': 'Винрейт', 'value': 'win_rate'},
+                                                        {'label': 'Отстрелы', 'value': 'shots'}
+                                                    ],
+                                                    value=['win_rate'],
+                                                    inline=True,
+                                                    style={'color': '#000', 'text-align': 'left'},
+                                                    className='checklist mb-2',
+                                                ),
+                                                dcc.Checklist(
+                                                    id='role-selector',
+                                                    options=[
+                                                        {'label': 'Мирный', 'value': 1},
+                                                        {'label': 'Мафия', 'value': 2},
+                                                        {'label': 'Шериф', 'value': 4},
+                                                        {'label': 'Дон', 'value': 3}
+                                                    ],
+                                                    value=[],
+                                                    inline=True,
+                                                    style={'color': '#000', 'text-align': 'left'},
+                                                    className='role-checklist mb-3',
+                                                ),
+
+                                                dcc.Graph(id='circular-layout', config={'displayModeBar': False, }),
+                                            ], className="text-center w-100"),
+                                        ], className="d-flex flex-column h-100"),
+                                    ], className="app__tile h-100 circular-tile", style={}),
+                                ], xs=12, sm=6, lg=4, className="mb-3"),
+
+                                dbc.Col([
+                                    html.Div([  # Внешний контейнер
+                                        html.Div([  # Внутренний контейнер для контента
+                                            html.Div(id='killed_row'),
+                                            html.Div([
+                                                html.Div('Убит в первую ночь', className="tile__title"),
+                                                html.Div(id="total_firstshot", className="tile__value"),
+                                                html.Div([
+                                                    dcc.Graph(id="shooting_target",
+                                                              config={'displayModeBar': False}),
+                                                    html.Div([
+                                                        html.Div(" i ",
+                                                                 id="shooting_target-info-icon",
+                                                                 style={
+                                                                     "fontSize": "16px",
+                                                                     "cursor": "pointer",
+                                                                     "width": "25px",
+                                                                     "height": "25px",
+                                                                     "border-radius": "50%",
+                                                                     "background": "#fff",
+                                                                     "border": "2px solid #6b7280",
+                                                                     "display": "flex",
+                                                                     "color": "#6b7280",
+                                                                     "alignItems": "center",
+                                                                     "justifyContent": "center",
+                                                                 }
+                                                                 ),
+                                                        dbc.Tooltip(
+                                                            [
+                                                                html.P("Сколько мафии в ЛХ игрока",
+                                                                       className="mb-2 ",
+                                                                       style={'font-weight': 'bold',
+                                                                              'text-align': 'left'}),
+                                                                html.Div([
+                                                                    html.Div([
+                                                                        html.Div(className="tooltip_rect_color",
+                                                                                 style={'background': '#cbe5f3'}),
+                                                                        html.P('Тройка черных')
+                                                                    ], className="tooltip_row"),
+
+                                                                    html.Div([
+                                                                        html.Div(className="tooltip_rect_color",
+                                                                                 style={'background': '#efbf00'}),
+                                                                        html.P('Два черных в ЛХ',
+                                                                               style={'text-align': 'left'})
+                                                                    ], className="tooltip_row"),
+                                                                    html.Div([
+                                                                        html.Div(className="tooltip_rect_color",
+                                                                                 style={'background': '#295883'}),
+                                                                        html.P('Один черный в ЛХ')
+                                                                    ], className="tooltip_row"),
+                                                                    html.Div([
+                                                                        html.Div(className="tooltip_rect_color",
+                                                                                 style={'background': '#f24236'}),
+                                                                        html.P('Молоко')
+                                                                    ], className="tooltip_row"),
+
+                                                                ], className="mb-0 pl-3")
+                                                            ],
+                                                            target="shooting_target-info-icon",
+                                                            placement="right",
+                                                            delay=1000,
+                                                            className="tooltip-timeline",
+
+                                                        )
+                                                    ], style={"display": "flex", "alignItems": "center",
+                                                              'position': 'absolute', 'top': 0, 'right': '15px'}),
+
+                                                ], className="text-center w-100",
+                                                    style={'position': 'absolute', 'top': 20, 'right': 0}),
+
+                                            ], className="app__tile mb-3 shooting_target",
+                                                style={'position': 'relative'}),
+
+                                        ], className="d-flex flex-column h-100")
+                                    ], className=" h-100"),
+                                ], xs=12, sm=12, lg=4, className="mb-3 h-100 order-sm-3 order-lg-2"),
+                            ], className="g-3 h-100")
+
+                        ], className='app__content'),
+
+                        # FOOTER INFO
+                        html.Div([
+                            html.Div([
+                                html.Div([
+                                    html.Img(src='assets/img/logo.png', style={'width': '80px'}),
+                                    html.P('2024 ШIFFER Inc©. Информация носит ознакомительный характер.',
+                                           style={'font-size': '15px', 'margin': '0 10px'}),
+                                ], style={'margin-top': '10px', 'display': 'flex', 'flex-direction': 'row',
+                                          'align-items': 'center', 'font-size': '15px'}, className='footer'),
+                                html.Div([
+                                    html.P('Source:'),
+                                    html.A("ShifferData", href='https://app.shiffer.info/#/turnirlist?type=15',
+                                           target="_blank",
+                                           className='link')
+                                ], className='data_', style={'text-align': 'center'}),
+
+                                html.Div([
+                                    html.P('Created by Luterino '),
+                                    html.Img(
+                                            src='/assets/foto/creator.jpg',
+                                            style={
+                                                "cursor": "pointer",
+                                                "border": "2px solid transparent",
+                                                "borderRadius": "50%",
+                                                "width": "80px",
+                                                "height": "80px",
+                                                "objectFit": "cover"
+                                            }
+                                    ),
+                                ], className='data_links', style={'text-align': 'center'})
+                            ], className='vrectangle')
+                        ], className='app__footer'),
 
 ], style={'display': 'flex'}, className='app__wrapper _container')
-
 
 
 # Callback для изменения текста и подсветки выбранного игрока
 outputs = [
     Output("player-content", "children"),
     Output("tournament-timeline", "figure")
-    # Output("role-pie-chart", "figure")
 ] + [Output(f"player-box-{i}", "style") for i in range(len(players))]
 
 @app.callback(
-    # [Output("total_games", "children"),
-    # Output("total_winrate", "children")]+
     outputs,
     [Input(f"player-{i}", "n_clicks") for i in range(len(players))],
     [State("player-content", "children")]
@@ -482,13 +507,17 @@ def update_players_dashboard(selected_player):
     fig_winrate = winrate_chart(winrate_value)
 
     # Подсчет общего количества игр по ролям
-    total_games_by_role = selected_df['role_id'].value_counts()
+    total_games_by_role = selected_df.groupby('role_id').agg(total_games = ('game_id', 'nunique'),
+                                             dops = ('only_dops', 'sum')
+                                             )
 
     # Подсчет победных игр по ролям
     win_games_by_role = selected_df[selected_df['win_condition'] == 1]['role_id'].value_counts()
 
     # Создаем DataFrame с играми и победами
-    role_stats = pd.DataFrame({'total_games': total_games_by_role, 'win_games': win_games_by_role}).reset_index()
+    role_stats = pd.DataFrame({'total_games': total_games_by_role['total_games'],
+                               'win_games': win_games_by_role,
+                               'dops': total_games_by_role['dops'].round(2)}).reset_index()
     role_stats.rename(columns={'index': 'role_id'}, inplace=True)
 
     # Заполняем NaN в победах нулями (если у роли нет побед)
@@ -497,8 +526,6 @@ def update_players_dashboard(selected_player):
     # Считаем винрейт (если total_games = 0, винрейт тоже 0)
     role_stats['winrate'] = ((role_stats['win_games'] / role_stats['total_games'].fillna(0)) * 100).round(1)
     role_stats = role_stats.merge(get_role(), on='role_id', how='left')
-
-
 
     drawn_cards = (selected_df['role_id'].value_counts(normalize=True) * 100).round(0).astype(int).reset_index().rename(columns={'proportion': 'count'})
     drawn_cards = drawn_cards.merge(get_role(), on='role_id', how='left')
