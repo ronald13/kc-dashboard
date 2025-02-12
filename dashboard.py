@@ -268,7 +268,9 @@ app.layout = html.Div([
 
                                             html.Div([
                                                 html.Div('Дополнительные факты:', className="tile__title"),
-                                                html.Div(' - Шериф умирал в первую ночь 33 раза из 205',
+                                                html.Div(' - Шериф умирал в первую ночь 37 раз из 225',
+                                                         className="tile__title"),
+                                                html.Div(' - Мирные при этом побеждали в 27% случаев',
                                                          className="tile__title"),
                                             ], className="app__tile mb-3"),
 
@@ -565,11 +567,22 @@ def update_players_dashboard(selected_player):
     killed_row_player = dbc.Row([
                                     dbc.Col([
                                         html.Div('Выиграно серий', className="tile__title", style={'white-space': 'nowrap'}),
-                                        html.Div(number_series_win, className="tile__value", style={'margin-top': 10}),
-                                    ], className="app__tile"),
+                                        html.Div(number_series_win, className="tile__value", style={'font-size': 24, 'margin-top': 10}),
+                                        html.Img(
+                                            src='/assets/trophy.png',
+                                            style={
+                                                "width": "50px",
+                                                "height": "50px",
+                                                "objectFit": "cover",
+                                                "position":"absolute",
+                                                "right": "8px",
+                                                "bottom": "10px"
+                                            }
+                                        ),
+                                    ], className="app__tile", style={ "position":"relative",}),
                                     dbc.Col([
-                                        html.Div('Средний ДБ', className="tile__title", style={'white-space': 'nowrap'}),
-                                        html.Div(avg_db_value, className="tile__value", style={'margin-top': 10}),
+                                        html.Div(['Средний ДБ ' ,html.Span('за 10 игр', style={'font-size': 12})], className="tile__title", style={'white-space': 'nowrap'}),
+                                        html.Div(avg_db_value, className="tile__value", style={'font-size': 24, 'margin-top': 10}),
                                     ], className="app__tile"),
     ], style={'gap': 10, 'margin': "0 0 10px 0"})
 
@@ -590,7 +603,7 @@ def update_players_dashboard(selected_player):
                         style={'min-width': '200px', 'align-items': 'center'},
                         className="app__tile quadrant_tile") if selected_player else None,
 
-                ], className="h-100", style={"margin": 0, 'gap':'10px'})
+                ], className="", style={"margin": 0, 'gap':'10px'})
 
 
     return ( html.Div(selected_df['game_id'].nunique()),
