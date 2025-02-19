@@ -325,7 +325,7 @@ app.layout = html.Div([
                                                                                    config={'displayModeBar': False, }),
                                                                      ], className="text-center w-100"),
                                                                  ],
-                                                                 style={'border-top-left-radius':'5px','height':'auto', 'height':'auto'}
+                                                                 style={'border-top-left-radius':'5px'}
                                                                  ),
                                                          dcc.Tab(label='Парная аналитика',
                                                                  value='tab-2',
@@ -367,7 +367,7 @@ app.layout = html.Div([
                                                                                    style={'height': '350px',}),
                                                                      ], className="text-center w-100", style={}),
                                                                  ],
-                                                                 style={'border-top-right-radius':'5px', }
+                                                                 style={'border-top-right-radius':'5px' }
                                                                  ),
                                                      ],
                                                      style={'margin-bottom': '30px',

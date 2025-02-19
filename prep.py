@@ -767,18 +767,20 @@ def create_heatmap(df, role='Мирные', min_winrate=0,  min_games=0):
         games_matrix.loc[p1, p2] = row['total_games']
         games_matrix.loc[p2, p1] = row['total_games']
 
+
     # # Получаем цветовую схему в зависимости от роли
     colorscale = get_colorscale(role)
 
     # Создаем тепловую карту
     fig = go.Figure(data=go.Heatmap(
         z=winrate_matrix.values,
-        x=players_short,  # Используем сокращенные имена для осей
+        x=players,  # Используем сокращенные имена для осей
         y=players,
         text=games_matrix.values,
         texttemplate="%{text}",
         textfont={"size": 10},
         hoverongaps=False,
+
         hovertemplate="<b>%{y} - %{x}</b><br>" +
                       "Винрейт: %{z:.1f}%<br>" +
                       "Всего игр: %{text}<br><extra></extra>",
@@ -787,7 +789,6 @@ def create_heatmap(df, role='Мирные', min_winrate=0,  min_games=0):
         xgap=2,
         ygap=2
     ))
-
     # Настраиваем layout
     fig.update_layout(
         margin={'t': 0, 'r': 5, 'l': 0, 'b': 0, 'pad': 15},
@@ -798,6 +799,8 @@ def create_heatmap(df, role='Мирные', min_winrate=0,  min_games=0):
             'side': 'top',
             'position': 1,
             'tickangle': 0,
+            'ticktext': players_short,  # Полные имена для оси X
+            'tickvals': list(range(len(short_names))),  # Позиции для меток
             'tickfont': dict(
                 size=11,
             ),
