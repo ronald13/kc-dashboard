@@ -6,7 +6,6 @@ from collections import Counter
 import math
 
 
-
 MAFIA_COLOR = '#295883'
 CITIZEN_COLOR = '#f24236'
 SHERIFF_COLOR = '#cbe5f3'

@@ -10,9 +10,6 @@ from prep import create_timeline, get_full_data, winrate_chart, create_cart_dist
 
 from prep_data import analyze_pairs_optimized
 import json
-import numpy as np
-import dash_mantine_components as dmc
-
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -111,9 +108,6 @@ default_style = {
         "boxShadow": "0 4px 6px rgba(0, 0, 0, 0.1)"
     }
 
-
-
-import dash_mantine_components as dmc
 
 app = Dash(
     __name__, external_stylesheets=[dbc.themes.BOOTSTRAP],
