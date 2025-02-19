@@ -1,13 +1,17 @@
 import os
+from pydoc import classname
+
 import pandas as pd
 import dash
 from dash import Dash, dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
 from prep import create_timeline, get_full_data, winrate_chart, create_cart_distibution, get_role, \
-    create_shooting_target, create_circular_layout, create_winrate_distibution, number_win_series, generate_quadrant_plot
+    create_shooting_target, create_circular_layout, create_winrate_distibution, number_win_series, generate_quadrant_plot, create_heatmap
+
+from prep_data import analyze_pairs_optimized
 import json
 import numpy as np
-
+import dash_mantine_components as dmc
 
 
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -109,6 +113,7 @@ default_style = {
 
 
 
+import dash_mantine_components as dmc
 
 app = Dash(
     __name__, external_stylesheets=[dbc.themes.BOOTSTRAP],
@@ -118,7 +123,11 @@ app = Dash(
 
 )
 
-app.title = "Капитанский стол | Dashboard"
+
+
+
+
+app.title = "Капитанский стол 3.0 | Dashboard"
 server = app.server
 
 
@@ -179,7 +188,7 @@ app.layout = html.Div([
                                             ),
                                             html.Div(player["nickname"],
                                                      style={"textAlign": "left", "marginTop": "8px",
-                                                            'fontWeight': 500, 'text-transform': 'uppercase',
+                                                            'fontWeight': 500, 'text-transform': 'capitalized',
                                                             'color': '#383737'}),
 
                                         ], style={'display': 'flex', 'flex-direction': 'column',
@@ -269,9 +278,9 @@ app.layout = html.Div([
                                             html.Div([
                                                 html.Div('Дополнительные факты:', className="tile__title"),
                                                 html.Div(' - Шериф умирал в первую ночь 37 раз из 225',
-                                                         className="tile__title"),
+                                                         className="tile__title", style={'font-size':14}),
                                                 html.Div(' - Мирные при этом побеждали в 27% случаев',
-                                                         className="tile__title"),
+                                                         className="tile__title", style={'font-size':14}),
                                             ], className="app__tile mb-3"),
 
                                         ], className="d-flex flex-column h-100")
@@ -279,37 +288,101 @@ app.layout = html.Div([
                                 ], xs=12, sm=6, lg=4, className="mb-3"),
                                 dbc.Col([
                                     html.Div([  # Внешний контейнер
-                                        html.Div([  # Внутренний контейнер для контента
+                                        html.Div([
                                             html.Div(id="player-content", className="text-center my-4 fs-4",
-                                                     style={'display': 'none'}),
-                                            html.Div([
-                                                dcc.Checklist(
-                                                    id='metric-selector',
-                                                    options=[
-                                                        {'label': 'Винрейт', 'value': 'win_rate'},
-                                                        {'label': 'Отстрелы', 'value': 'shots'}
-                                                    ],
-                                                    value=['win_rate'],
-                                                    inline=True,
-                                                    style={'color': '#000', 'text-align': 'left'},
-                                                    className='checklist mb-2',
-                                                ),
-                                                dcc.Checklist(
-                                                    id='role-selector',
-                                                    options=[
-                                                        {'label': 'Мирный', 'value': 1},
-                                                        {'label': 'Мафия', 'value': 2},
-                                                        {'label': 'Шериф', 'value': 4},
-                                                        {'label': 'Дон', 'value': 3}
-                                                    ],
-                                                    value=[],
-                                                    inline=True,
-                                                    style={'color': '#000', 'text-align': 'left'},
-                                                    className='role-checklist mb-3',
-                                                ),
+                                                                                                 style={'display': 'none'}),
+                                            dcc.Tabs(id="tabs-with-props",
+                                                     children=[
+                                                         dcc.Tab(label='Бокс Аналитика',
+                                                                 value='tab-1',
+                                                                 className="tab_style",
+                                                                 selected_className="tab_selected_style active_tab",
+                                                                 children=[
+                                                                     html.Div([
+                                                                         dcc.Checklist(
+                                                                             id='metric-selector',
+                                                                             options=[
+                                                                                 {'label': 'Винрейт',
+                                                                                  'value': 'win_rate'},
+                                                                                 {'label': 'Отстрелы', 'value': 'shots'}
+                                                                             ],
+                                                                             value=['win_rate'],
+                                                                             inline=True,
+                                                                             style={'color': '#000',
+                                                                                    'text-align': 'left'},
+                                                                             className='checklist mb-2',
+                                                                         ),
+                                                                         dcc.Checklist(
+                                                                             id='role-selector',
+                                                                             options=[
+                                                                                 {'label': 'Мирный', 'value': 1},
+                                                                                 {'label': 'Мафия', 'value': 2},
+                                                                                 {'label': 'Шериф', 'value': 4},
+                                                                                 {'label': 'Дон', 'value': 3}
+                                                                             ],
+                                                                             value=[],
+                                                                             inline=True,
+                                                                             style={'color': '#000',
+                                                                                    'text-align': 'left'},
+                                                                             className='role-checklist mb-3',
+                                                                         ),
 
-                                                dcc.Graph(id='circular-layout', config={'displayModeBar': False, }),
-                                            ], className="text-center w-100"),
+                                                                         dcc.Graph(id='circular-layout',
+                                                                                   config={'displayModeBar': False, }),
+                                                                     ], className="text-center w-100"),
+                                                                 ],
+                                                                 style={'border-top-left-radius':'5px','height':'auto', 'height':'auto'}
+                                                                 ),
+                                                         dcc.Tab(label='Парная аналитика',
+                                                                 value='tab-2',
+                                                                 className="tab_style",
+                                                                 selected_className="tab_selected_style active_tab",
+                                                                 children=[
+                                                                     html.Div([
+                                                                         dbc.Row([
+                                                                             dbc.Col([
+                                                                                dcc.Checklist(
+                                                                                     id='heatmap-role-selector',
+                                                                                     options=[
+                                                                                         {'label': 'Мирные', 'value': 'Мирные'},
+                                                                                         {'label': 'Мафия', 'value': 'Мафия'},
+
+                                                                                     ],
+                                                                                     value=['Мирные'],
+                                                                                     inline=True,
+                                                                                     style={'color': '#000',
+                                                                                            'text-align': 'left'},
+                                                                                     className='role-checklist',
+                                                                                ),
+                                                                             ]),
+                                                                             dbc.Col([
+
+                                                                                 html.P('Лимит игр', style={'fontSize': 14}),
+                                                                                 dcc.Input(id="heatmap-game",
+                                                                                           type="number", placeholder="",
+                                                                                           debounce=False, value=4,
+                                                                                           style={'width': 60}),
+                                                                             ], className="d-flex", style={'align-items':'center' ,'gap':10}),
+
+                                                                         ], className="d-flex mb-3", style={'align-items':'center'}),
+
+
+
+                                                                         dcc.Graph(id='heatmap-chart',
+                                                                                   config={'displayModeBar': False, },
+                                                                                   style={'height': '350px',}),
+                                                                     ], className="text-center w-100", style={}),
+                                                                 ],
+                                                                 style={'border-top-right-radius':'5px', }
+                                                                 ),
+                                                     ],
+                                                     style={'margin-bottom': '30px',
+                                                            'margin-top': '-15px',
+                                                            'margin-left': '-12px',
+                                                            'margin-right': '-12px',
+                                                            'border-radius': '8px',
+                                                            }
+                                            ),
                                         ], className="d-flex flex-column h-100"),
                                     ], className="app__tile h-100 circular-tile", style={}),
                                 ], xs=12, sm=6, lg=4, className="mb-3"),
@@ -390,7 +463,7 @@ app.layout = html.Div([
 
                                         ], className="d-flex flex-column h-100")
                                     ], className=" h-100"),
-                                ], xs=12, sm=12, lg=4, className="mb-3 h-100 order-sm-3 order-lg-2"),
+                                ], xs=12, sm=12, lg=4, className="mb-3 order-sm-3 order-lg-2"),
                             ], className="g-3 h-100")
 
                         ], className='app__content'),
@@ -429,6 +502,7 @@ app.layout = html.Div([
                         ], className='app__footer'),
 
 ], style={'display': 'flex'}, className='app__wrapper _container')
+
 
 
 # Callback для изменения текста и подсветки выбранного игрока
@@ -619,12 +693,15 @@ def update_players_dashboard(selected_player):
 
 @app.callback(
     Output('circular-layout', 'figure'),
+    Output('heatmap-chart', 'figure'),
     Input('metric-selector', 'value'),
     Input('role-selector', 'value'),
-    Input('player-content', 'children')
+    Input('player-content', 'children'),
+    Input('heatmap-role-selector', 'value'),
+    Input('heatmap-game', 'value')
 
 )
-def update_figure(selected_metrics, selected_role, selected_player):
+def update_figure(selected_metrics, selected_role, selected_player, heatmap_selected_role, heatmap_limit_game):
 
     def update_role_values(value):
         all_values = [1, 2, 3, 4]
@@ -663,9 +740,18 @@ def update_figure(selected_metrics, selected_role, selected_player):
     result_df['win_rate_num'] = result_df['win_rate']
 
 
+    detailed_stats, grouped_stats = analyze_pairs_optimized(df_games)
+
+    grouped_stats = grouped_stats[(grouped_stats['player1_name'].isin(top10_players)) & (
+        grouped_stats['player2_name'].isin(top10_players))].sort_values(by='win_rate', ascending=False)
+
+    heatmap_figure = create_heatmap(grouped_stats, role=heatmap_selected_role[0],  min_winrate=50,  min_games=heatmap_limit_game)
 
 
-    return create_circular_layout(result_df, selected_metrics)
+
+
+    return  create_circular_layout(result_df, selected_metrics), heatmap_figure
+
 
 
 

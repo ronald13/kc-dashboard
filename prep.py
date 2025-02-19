@@ -6,6 +6,7 @@ from collections import Counter
 import math
 
 
+
 MAFIA_COLOR = '#295883'
 CITIZEN_COLOR = '#f24236'
 SHERIFF_COLOR = '#cbe5f3'
@@ -241,6 +242,8 @@ def create_timeline(df, selected_player=None):
         yaxis=dict(
             title='',
             showticklabels=False,
+            showgrid=False,
+            zeroline=False,
             fixedrange=True
         ),
         showlegend=False,
@@ -707,6 +710,103 @@ def generate_quadrant_plot(df, colors=['#f24236', '#295883', '#efbf00', '#cbe5f3
 
         # width=160,
         # height=160
+    )
+
+    return fig
+
+def shorten_name(name, max_length=4):
+    """Сокращает имя до указанной длины, сохраняя начало имени"""
+    if len(name) <= max_length:
+        return name
+    return name[:max_length] + '.'
+
+def get_colorscale(role):
+    """Возвращает цветовую схему в зависимости от роли"""
+    if role == 'Мирные':
+        return [
+            [0, 'rgb(255,240,240)'],      # Очень светлый пастельный розовый
+            [0.25, 'rgb(255,218,218)'],   # Светлый пастельный розовый
+            [0.5, 'rgb(255,182,182)'],    # Средний пастельный розовый
+            [0.75, 'rgb(255,150,150)'],   # Пастельный розовый
+            [1, 'rgb(255,105,105)']       # Более насыщенный пастельный розовый
+        ]
+    else:  # для Мафии
+        return [
+            [0, 'rgb(240,240,240)'],      # Очень светлый серый
+            [0.25, 'rgb(180,180,180)'],   # Светлый серый
+            [0.5, 'rgb(120,120,120)'],    # Средний серый
+            [0.75, 'rgb(80,80,80)'],      # Темно-серый
+            [1, 'rgb(40,40,40)']          # Очень темный серый
+        ]
+
+def create_heatmap(df, role='Мирные', min_winrate=0,  min_games=0):
+    ## Фильтруем данные по роли, винрейту и количеству игр
+    df_filtered = df[
+        (df['role_group'] == role) &
+        (df['win_rate'] >= min_winrate) &
+        (df['total_games'] >= min_games)
+        ].copy()
+
+    # Получаем уникальные имена игроков
+    players = sorted(list(set(df_filtered['player1_name'].unique()) |
+                          set(df_filtered['player2_name'].unique())))
+
+    # Создаем словарь для соответствия полных и сокращенных имен
+    short_names = {name: shorten_name(name) for name in players}
+    players_short = [short_names[name] for name in players]
+
+    # Создаем пустые матрицы для винрейта и количества игр
+    n = len(players)
+    winrate_matrix = pd.DataFrame(None, index=players, columns=players)
+    games_matrix = pd.DataFrame(None, index=players, columns=players)
+
+    # Заполняем матрицы данными
+    for _, row in df_filtered.iterrows():
+        p1, p2 = row['player1_name'], row['player2_name']
+        winrate_matrix.loc[p1, p2] = row['win_rate']
+        winrate_matrix.loc[p2, p1] = row['win_rate']
+        games_matrix.loc[p1, p2] = row['total_games']
+        games_matrix.loc[p2, p1] = row['total_games']
+
+    # # Получаем цветовую схему в зависимости от роли
+    colorscale = get_colorscale(role)
+
+    # Создаем тепловую карту
+    fig = go.Figure(data=go.Heatmap(
+        z=winrate_matrix.values,
+        x=players_short,  # Используем сокращенные имена для осей
+        y=players,
+        text=games_matrix.values,
+        texttemplate="%{text}",
+        textfont={"size": 10},
+        hoverongaps=False,
+        hovertemplate="<b>%{y} - %{x}</b><br>" +
+                      "Винрейт: %{z:.1f}%<br>" +
+                      "Всего игр: %{text}<br><extra></extra>",
+        colorscale=colorscale,
+        showscale=False,
+        xgap=2,
+        ygap=2
+    ))
+
+    # Настраиваем layout
+    fig.update_layout(
+        margin={'t': 0, 'r': 5, 'l': 0, 'b': 0, 'pad': 15},
+        # width=450,
+        height=350,
+        dragmode=False,
+        xaxis={
+            'side': 'top',
+            'position': 1,
+            'tickangle': 0,
+            'tickfont': dict(
+                size=11,
+            ),
+        },
+        # yaxis={
+        #
+        # },
+
     )
 
     return fig

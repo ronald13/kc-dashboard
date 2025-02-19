@@ -1,10 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,600;1,700;1,900&display=swap');
 
 body{
-     /*background-color: #f1f0f0;*/
+     background-color: #efefef;
      /*background-color: #282e38;*/
      font-family: 'Roboto' ,sans-serif;
-     color: #000;
+     color: #333;
      /*background: url("/assets/fom.png");*/
 
 }
@@ -778,4 +778,34 @@ button{
    min-width: 180px;
 }
 
+.tab{
+    border:none !important;
+    padding: 10px 25px!important;
+}
+
+.tab_style{
+    background-color: #e5e5e5 !important;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 16px;
+    color: #7f7f7f;
+    transition: background-color 0.1s, color 0.1s;
+
+
+
+
+
+}
+
+.tab-container{
+    flex-direction: row!important;
+}
+.tab_style:hover{
+    background-color: #d8d8d8!important;
+}
+
+.active_tab{
+     background-color: #fff!important;
+     color: #000;
+}
 
