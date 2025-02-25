@@ -32,19 +32,7 @@ nickname_mapping = {
     "Лупа": "lupa",
 
 }
-# Список игроков
-# players = [
-#     {"name": "Колобок", "nickname": "Колобок", "image": "assets/foto/kolobok.jpg"},
-#     {"name": "Зверюга", "nickname": "Зверюга", "image": "/assets/foto/zweruga.jpg"},
-#     {"name": "GOJO", "nickname": "GOJO", "image": "assets/foto/gojo.jpg"},
-#     {"name": "Ирландец", "nickname": "Ирландец", "image": "assets/foto/irlandman.jpg"},
-#     {"name": "Блудница", "nickname": "Блудница", "image": "assets/foto/bludnica.jpg"},
-#     {"name": "KED", "nickname": "KED", "image": "assets/foto/ked.jpg"},
-#     {"name": "Бывшая", "nickname": "Бывшая", "image": "assets/foto/byvshaja.jpg"},
-#     {"name": "Дантист", "nickname": "Дантист", "image": "assets/foto/dantist.jpg"},
-#     {"name": "Плесень", "nickname": "Плесень", "image": "assets/foto/plesen.jpg"},
-#     {"name": "Лупа", "nickname": "Лупа", "image": "assets/foto/lupa.jpg"},
-# ]
+
 
 # =====================================================================
 #                               READ DATA
@@ -117,6 +105,34 @@ app = Dash(
 
 )
 
+# Добавляем Google Tag Manager
+app.index_string = """
+<!DOCTYPE html>
+<html>
+    <head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6GC2W6QEY3"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-6GC2W6QEY3');
+    </script>
+        {%metas%}
+        <title>{%title%}</title>
+        {%favicon%}
+        {%css%}
+    </head>
+    <body>
+        {%app_entry%}
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+    </body>
+</html>
+"""
 
 
 
@@ -359,7 +375,7 @@ app.layout = html.Div([
                                                                                            debounce=False, value=4,
                                                                                            style={'width': 50},  disabled=False),
 
-                                                                             ], className="d-flex", style={'flex-basis': '42%','align-items':'center' ,'gap':10}),
+                                                                             ], className="d-flex", style={'flex-basis': '42%','align-items':'center' ,'gap':5}),
 
                                                                          ], className="d-flex mb-3", style={'align-items':'center'}),
 
