@@ -123,12 +123,6 @@ button{
     cursor:pointer;
 }
 
-#YearSelector input[type='radio']:checked + label,
-#YearSelector-mobile  input[type='radio']:checked + label{
-   background-color: #f99746;
-   color: #fff;
-   z-index:100;
-}
 
 .year__selector-mobile{
     display:none;
@@ -566,7 +560,7 @@ button{
 
 #TypeRefereeChart input[type="checkbox"]:checked,
 .checklist input[type="checkbox"]:checked {
-    accent-color: #f99746;
+    accent-color: #f24236;
 }
 
 #TypeRefereeChart{
@@ -684,7 +678,7 @@ button{
 }
 
 .checklist input[type="checkbox"]:checked {
-    accent-color: #f99746;
+    accent-color: #f24236;;
 }
 
 .role-checklist label:nth-of-type(1) input[type="checkbox"]:checked {
@@ -815,5 +809,21 @@ button{
 }
 #tabs-with-props .tab_style:nth-child(2){
       border-top-right-radius: 5px!important;
+}
+
+#heatmap-role-selector label{
+    margin-right:10px;
+}
+
+#heatmap-role-selector label input{
+    margin-right:10px;
+}
+
+#heatmap-role-selector label input {
+    margin-right:10px;
+}
+
+#heatmap-role-selector label input[type="radio"]:checked {
+    accent-color: #f24236;
 }
 

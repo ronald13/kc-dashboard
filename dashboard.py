@@ -6,7 +6,7 @@ import dash
 from dash import Dash, dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
 from prep import create_timeline, get_full_data, winrate_chart, create_cart_distibution, get_role, \
-    create_shooting_target, create_circular_layout, create_winrate_distibution, number_win_series, generate_quadrant_plot, create_heatmap
+    create_shooting_target, create_circular_layout, create_winrate_distibution, number_win_series, generate_quadrant_plot, create_heatmap, create_sankey
 
 from prep_data import analyze_pairs_optimized
 import json
@@ -207,7 +207,7 @@ app.layout = html.Div([
                                                          "width": "25px",
                                                          "height": "25px",
                                                          "border-radius": "50%",
-                                                         "background": "#fff",
+                                                         "background": "#efefef",
                                                          "border": "2px solid #6b7280",
                                                          "display": "flex",
                                                          "color": "#6b7280",
@@ -335,28 +335,31 @@ app.layout = html.Div([
                                                                      html.Div([
                                                                          dbc.Row([
                                                                              dbc.Col([
-                                                                                dcc.Checklist(
+                                                                                 dcc.RadioItems(
                                                                                      id='heatmap-role-selector',
                                                                                      options=[
-                                                                                         {'label': 'Мирные', 'value': 'Мирные'},
-                                                                                         {'label': 'Мафия', 'value': 'Мафия'},
-
+                                                                                         {'label': 'Мирные',
+                                                                                          'value': 'Мирные'},
+                                                                                         {'label': 'Мафия',
+                                                                                          'value': 'Мафия'},
                                                                                      ],
-                                                                                     value=['Мирные'],
+                                                                                     value='Мирные',
+                                                                                     # По умолчанию выбрана одна опция
                                                                                      inline=True,
                                                                                      style={'color': '#000',
                                                                                             'text-align': 'left'},
-                                                                                     className='role-checklist',
-                                                                                ),
-                                                                             ]),
+                                                                                     className='role-radioitems',
+                                                                                 )
+                                                                             ], style={'flex-basis': '55%',}),
                                                                              dbc.Col([
 
                                                                                  html.P('Лимит игр', style={'fontSize': 14}),
                                                                                  dcc.Input(id="heatmap-game",
                                                                                            type="number", placeholder="",
                                                                                            debounce=False, value=4,
-                                                                                           style={'width': 60}),
-                                                                             ], className="d-flex", style={'align-items':'center' ,'gap':10}),
+                                                                                           style={'width': 50},  disabled=False),
+
+                                                                             ], className="d-flex", style={'flex-basis': '42%','align-items':'center' ,'gap':10}),
 
                                                                          ], className="d-flex mb-3", style={'align-items':'center'}),
 
@@ -469,10 +472,10 @@ app.layout = html.Div([
                                     html.Img(src='assets/img/logo.png', style={'width': '80px'}),
                                     html.P('2024 ШIFFER Inc©. Информация носит ознакомительный характер.',
                                            style={'font-size': '15px', 'margin': '0 10px'}),
-                                ], style={'margin-top': '10px', 'display': 'flex', 'flex-direction': 'row',
+                                ], style={'display': 'flex', 'flex-direction': 'row',
                                           'align-items': 'center', 'font-size': '15px'}, className='footer'),
                                 html.Div([
-                                    html.P('Source:'),
+                                    # html.P('Source:'),
                                     html.A("ShifferData", href='https://app.shiffer.info/#/turnirlist?type=15',
                                            target="_blank",
                                            className='link')
@@ -688,6 +691,8 @@ def update_players_dashboard(selected_player):
 @app.callback(
     Output('circular-layout', 'figure'),
     Output('heatmap-chart', 'figure'),
+    Output('heatmap-role-selector', 'options'),
+    Output('heatmap-game', 'disabled'),
     Input('metric-selector', 'value'),
     Input('role-selector', 'value'),
     Input('player-content', 'children'),
@@ -705,9 +710,17 @@ def update_figure(selected_metrics, selected_role, selected_player, heatmap_sele
             return all_values
         return value
     selected_roles = update_role_values(selected_role)
+
+    detailed_stats, grouped_stats = analyze_pairs_optimized(df_games)
+
+    grouped_stats = grouped_stats[(grouped_stats['player1_name'].isin(top10_players)) & (
+        grouped_stats['player2_name'].isin(top10_players))].sort_values(by='win_rate', ascending=False)
+
     if selected_player:
         df_active = df_games[df_games['player_name'].isin([selected_player]) & (df_games['role_id'].isin(selected_roles))]
         df_firstshots_active = df_firstshots[df_firstshots['player_name'].isin([selected_player]) & (df_firstshots['role_id'].isin(selected_roles))]
+        grouped_stats = grouped_stats[grouped_stats['player1_name'].isin([selected_player])]
+
     else:
         df_active = df_games[df_games['role_id'].isin(selected_roles)]
         df_firstshots_active = df_firstshots[df_firstshots['role_id'].isin(selected_roles)]
@@ -734,17 +747,23 @@ def update_figure(selected_metrics, selected_role, selected_player, heatmap_sele
     result_df['win_rate_num'] = result_df['win_rate']
 
 
-    detailed_stats, grouped_stats = analyze_pairs_optimized(df_games)
+    heatmap_figure = create_heatmap(grouped_stats, role=heatmap_selected_role,  min_winrate=50,  min_games=heatmap_limit_game)
+    sankey_figure = create_sankey(grouped_stats)
 
-    grouped_stats = grouped_stats[(grouped_stats['player1_name'].isin(top10_players)) & (
-        grouped_stats['player2_name'].isin(top10_players))].sort_values(by='win_rate', ascending=False)
+    radioitems_status = True if selected_player else False
+    unput_status = True if selected_player else False
 
-    heatmap_figure = create_heatmap(grouped_stats, role=heatmap_selected_role[0],  min_winrate=50,  min_games=heatmap_limit_game)
+    radioitems_options = [
+        {'label': 'Мирные', 'value': 'Мирные', 'disabled': radioitems_status},
+        {'label': 'Мафия', 'value': 'Мафия', 'disabled': radioitems_status}
+    ]
 
 
 
-
-    return  create_circular_layout(result_df, selected_metrics), heatmap_figure
+    return  (create_circular_layout(result_df, selected_metrics),
+             sankey_figure if selected_player else heatmap_figure,
+             radioitems_options,
+             unput_status)
 
 
 

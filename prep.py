@@ -812,3 +812,91 @@ def create_heatmap(df, role='Мирные', min_winrate=0,  min_games=0):
     )
 
     return fig
+
+def create_sankey(df):
+
+    # Создание нод для первого столбца - комбинация имени игрока и роли
+    df['source_node'] = df['player1_name'] + ' ' + df['role_group']
+
+    # Подготовка данных для Sankey диаграммы
+    sources = []
+    targets = []
+    values = []
+    labels = []
+    custom_data = []
+
+    # Уникальные значения для source_node (первый столбец)
+    source_nodes = df['source_node'].unique().tolist()
+    # Уникальные значения для player2_name (второй столбец)
+    target_nodes = df['player2_name'].unique().tolist()
+
+    # Создание словаря для маппинга названий нод на их индексы
+    node_indices = {node: i for i, node in enumerate(source_nodes + target_nodes)}
+
+    # Цвета для различных ролевых групп
+    role_colors = {
+        'Мирные': 'rgba(242, 66, 54, 0.6)',  # Синий для мирных
+        'Мафия': 'rgba(41, 88, 131, 0.6)'  # Темно-красный для мафии
+    }
+
+    # Заполнение источников, целей и значений
+    node_colors = []
+    for source_node in source_nodes:
+        role = source_node.split(' ')[-1]
+        node_colors.append(role_colors.get(role, 'rgba(100, 100, 100, 0.8)'))
+
+    # Добавляем цвета для target_nodes
+    for _ in target_nodes:
+        node_colors.append('rgba(229, 231, 235, 0.8)')  # Зеленый для target nodes
+
+    # Собираем данные для связей
+    link_colors = []
+    hover_data = []
+
+    for _, row in df.iterrows():
+        source_index = node_indices[row['source_node']]
+        target_index = node_indices[row['player2_name']]
+        sources.append(source_index)
+        targets.append(target_index)
+        values.append(row['win_rate'])
+
+        # Цвет связи на основе роли
+        role = row['role_group']
+        link_colors.append(role_colors.get(role, 'gray'))
+
+        # Данные для hover
+        hover_data.append({
+            'player2_name': row['player2_name'],
+            'wins_together': row['wins_together'],
+            'total_games': row['total_games'],
+            'win_rate': row['win_rate']
+        })
+
+    # Создание Sankey диаграммы
+    fig = go.Figure(data=[go.Sankey(
+        node=dict(
+            pad=10,
+            thickness=15,
+            line=dict(color="black", width=0.4),
+            label=source_nodes + target_nodes,
+            color=node_colors,
+            hoverinfo='none'  # Отключаем hover для узлов
+        ),
+        link=dict(
+            source=sources,
+            target=targets,
+            value=values,
+            color=link_colors,
+            hovertemplate='%{customdata.player2_name}<br>Выиграно %{customdata.wins_together} из %{customdata.total_games}<br>Winrate: %{customdata.win_rate}%<extra></extra>',
+            customdata=hover_data
+        ))])
+
+    # Настройка макета
+    fig.update_layout(
+        margin={'t': 10, 'r': 5, 'l': 5, 'b': 15, 'pad': 15},
+
+        font_size=12,
+
+    )
+
+    return fig
