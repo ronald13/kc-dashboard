@@ -69,6 +69,10 @@
         min-width: auto;
     }
 
+    .players_list{
+     min-width: 1100px;
+    }
+
 
 }
 

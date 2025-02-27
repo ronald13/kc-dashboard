@@ -207,7 +207,7 @@ app.layout = html.Div([
                                         ) for i, player in enumerate(players)
                                     ],
                                     className="players_list",
-                                    style={'flex-wrap': 'nowrap', 'min-width': '1200px', 'padding': '0 15px'}
+                                    style={'flex-wrap': 'nowrap', 'padding': '0 15px'}
                                 ),
                             ], style={'overflow-x': 'auto', 'margin': '0 10px'}),
 
@@ -378,12 +378,7 @@ app.layout = html.Div([
                                                                              ], className="d-flex", style={'flex-basis': '42%','align-items':'center' ,'gap':5}),
 
                                                                          ], className="d-flex mb-3", style={'align-items':'center'}),
-
-
-
-                                                                         dcc.Graph(id='heatmap-chart',
-                                                                                   config={'displayModeBar': False, },
-                                                                                   style={'height': '350px',}),
+                                                                         html.Div(id='heatmap-chart'),
                                                                      ], className="text-center w-100", style={}),
                                                                  ],
                                                                  style={'border-top-right-radius':'5px' }
@@ -706,7 +701,7 @@ def update_players_dashboard(selected_player):
 
 @app.callback(
     Output('circular-layout', 'figure'),
-    Output('heatmap-chart', 'figure'),
+    Output('heatmap-chart', 'children'),
     Output('heatmap-role-selector', 'options'),
     Output('heatmap-game', 'disabled'),
     Input('metric-selector', 'value'),
@@ -776,8 +771,16 @@ def update_figure(selected_metrics, selected_role, selected_player, heatmap_sele
 
 
 
+    sankey_block = html.Div([
+        dcc.Graph(figure=sankey_figure, config={'displayModeBar': False}),
+    ], style={})
+
+    heatmap_block = html.Div([
+        dcc.Graph(figure=heatmap_figure, config={'displayModeBar': False}),
+    ], style={'overflow-x':'scroll'})
+
     return  (create_circular_layout(result_df, selected_metrics),
-             sankey_figure if selected_player else heatmap_figure,
+             sankey_block if selected_player else heatmap_block,
              radioitems_options,
              unput_status)
 

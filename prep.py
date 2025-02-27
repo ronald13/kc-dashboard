@@ -792,7 +792,7 @@ def create_heatmap(df, role='Мирные', min_winrate=0,  min_games=0):
     # Настраиваем layout
     fig.update_layout(
         margin={'t': 0, 'r': 5, 'l': 0, 'b': 0, 'pad': 15},
-        # width=450,
+        width=465,
         height=350,
         dragmode=False,
         xaxis={
@@ -814,7 +814,6 @@ def create_heatmap(df, role='Мирные', min_winrate=0,  min_games=0):
     return fig
 
 def create_sankey(df):
-
     # Создание нод для первого столбца - комбинация имени игрока и роли
     df['source_node'] = df['player1_name'] + ' ' + df['role_group']
 
@@ -822,13 +821,26 @@ def create_sankey(df):
     sources = []
     targets = []
     values = []
-    labels = []
-    custom_data = []
 
     # Уникальные значения для source_node (первый столбец)
     source_nodes = df['source_node'].unique().tolist()
+
     # Уникальные значения для player2_name (второй столбец)
     target_nodes = df['player2_name'].unique().tolist()
+
+    # Создаем словарь для хранения win_rate для каждого target_node
+    target_win_rates = {}
+
+    # Рассчитываем общий процент выигрыша для каждого target игрока
+    for target_node in target_nodes:
+        player_rows = df[df['player2_name'] == target_node]
+        # Если нужно средневзвешенное значение с учетом количества игр
+        weighted_win_rate = sum(player_rows['win_rate'] * player_rows['total_games']) / sum(player_rows['total_games'])
+        # Округляем до одного десятичного знака
+        target_win_rates[target_node] = round(weighted_win_rate, 1)
+
+    # Модифицируем target_nodes, добавляя процент выигрыша
+    target_node_labels = [f"{node} ({target_win_rates[node]}%)" for node in target_nodes]
 
     # Создание словаря для маппинга названий нод на их индексы
     node_indices = {node: i for i, node in enumerate(source_nodes + target_nodes)}
@@ -846,8 +858,12 @@ def create_sankey(df):
         node_colors.append(role_colors.get(role, 'rgba(100, 100, 100, 0.8)'))
 
     # Добавляем цвета для target_nodes
-    for _ in target_nodes:
-        node_colors.append('rgba(229, 231, 235, 0.8)')  # Зеленый для target nodes
+    for target_node in target_nodes:
+        # Можно варьировать оттенок в зависимости от win_rate
+        win_rate = target_win_rates[target_node]
+        # Например, чем выше процент, тем темнее оттенок
+        opacity = min(0.3 + win_rate / 100, 0.9)  # от 0.3 до 0.9 в зависимости от win_rate
+        node_colors.append(f'rgba(229, 231, 235, {opacity})')
 
     # Собираем данные для связей
     link_colors = []
@@ -875,28 +891,45 @@ def create_sankey(df):
     # Создание Sankey диаграммы
     fig = go.Figure(data=[go.Sankey(
         node=dict(
-            pad=10,
-            thickness=15,
-            line=dict(color="black", width=0.4),
-            label=source_nodes + target_nodes,
+            pad=15,  # Увеличил pad для лучшего восприятия на мобильных
+            thickness=15,  # Увеличил толщину для лучшего таргетинга
+            line=dict(color="black", width=0.5),
+            label=source_nodes + target_node_labels,  # Используем modified_target_nodes с процентами
             color=node_colors,
-            hoverinfo='none'  # Отключаем hover для узлов
+            hoverinfo='none',  # Используем допустимое значение 'none'
+            hoverlabel=dict(
+                bgcolor="white",
+                font_size=14,
+                font_family="Arial"
+            )
         ),
         link=dict(
             source=sources,
             target=targets,
             value=values,
             color=link_colors,
-            hovertemplate='%{customdata.player2_name}<br>Выиграно %{customdata.wins_together} из %{customdata.total_games}<br>Winrate: %{customdata.win_rate}%<extra></extra>',
-            customdata=hover_data
+            hovertemplate='<b>%{customdata.player2_name}</b><br>Выиграно: <b>%{customdata.wins_together}</b> из <b>%{customdata.total_games}</b><br>Winrate: <b>%{customdata.win_rate}%</b><extra></extra>',
+            customdata=hover_data,
+            hoverlabel=dict(
+                bgcolor="white",
+                bordercolor="black",
+                font_size=14,
+                font_family="Arial"
+            )
         ))])
 
     # Настройка макета
     fig.update_layout(
-        margin={'t': 10, 'r': 5, 'l': 5, 'b': 15, 'pad': 15},
-
-        font_size=12,
-
+        margin={'t': 20, 'r': 10, 'l': 10, 'b': 20, 'pad': 15},
+        dragmode='pan',  # Меняем на 'pan' для лучшего взаимодействия на мобильных
+        font_size=13,
+        hoverdistance=50,  # Увеличенное расстояние для активации ховера
+        hovermode='closest',  # Режим ховера "ближайший" лучше работает на мобильных
+        uirevision='true',  # Сохранение состояния при взаимодействии
+        clickmode='event+select',  # Улучшенное взаимодействие при клике
+        autosize=True
     )
 
+
+    # Возвращаем фигуру
     return fig

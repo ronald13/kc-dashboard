@@ -589,6 +589,10 @@ button{
      justify-content: center;
  }
 
+.players_list{
+     min-width: 1200px;
+}
+
 
 
 /*############ KC ###############*/
@@ -826,4 +830,5 @@ button{
 #heatmap-role-selector label input[type="radio"]:checked {
     accent-color: #f24236;
 }
+
 
